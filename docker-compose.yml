@@ -1,0 +1,48 @@
+# ===== docker-compose para desarrollo local =====
+# Levanta MongoDB local (+ Mongo Express opcional) y la app Next.js.
+#
+#   docker compose up -d mongo          → solo la base (corré `npm run dev` aparte)
+#   docker compose up --build           → app + base juntas
+#   docker compose --profile tools up    → además Mongo Express en :8081
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      # Dentro de la red de compose la base se llama "mongo", no "localhost"
+      MONGODB_URI: mongodb://mongo:27017/prode
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  # Opcional: UI web para inspeccionar la base. `docker compose --profile tools up`
+  mongo-express:
+    image: mongo-express:1.0.2
+    profiles: ["tools"]
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      mongo:
+        condition: service_healthy

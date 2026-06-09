@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync?mode=live",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/sync?mode=all",
+      "schedule": "0 4 * * *"
+    }
+  ]
+}
