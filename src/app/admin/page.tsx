@@ -6,9 +6,20 @@ import { apiGet, apiPost, apiPut } from "@/lib/api-client";
 import type { MatchVM } from "@/components/MatchCard";
 import type { PublicUser } from "@/lib/types";
 
+interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  is_admin: boolean;
+  created_at: string;
+  predictions_count: number;
+  total_points: number;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [matches, setMatches] = useState<MatchVM[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
   const [syncing, setSyncing] = useState(false);
@@ -17,6 +28,9 @@ export default function AdminPage() {
     apiGet<{ matches: MatchVM[] }>("/matches")
       .then((d) => setMatches(d.matches))
       .finally(() => setLoading(false));
+    apiGet<{ users: AdminUser[] }>("/admin/users")
+      .then((d) => setUsers(d.users))
+      .catch(() => {});
   }
 
   useEffect(() => {
@@ -66,15 +80,74 @@ export default function AdminPage() {
 
       {msg && <p className="text-sm text-pitch">{msg}</p>}
 
-      {loading ? (
-        <p className="text-slate-400">Cargando…</p>
-      ) : (
-        <div className="space-y-2">
-          {matches.map((m) => (
-            <AdminMatchRow key={m.id} match={m} onSaved={load} />
-          ))}
-        </div>
-      )}
+      {/* Usuarios registrados */}
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Usuarios registrados ({users.length})
+        </h2>
+        {users.length === 0 ? (
+          <p className="text-sm text-slate-400">Todavía no hay usuarios.</p>
+        ) : (
+          <div className="card overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-400">
+                <tr>
+                  <th className="px-3 py-2">#</th>
+                  <th className="px-3 py-2">Usuario</th>
+                  <th className="px-3 py-2">Email</th>
+                  <th className="px-3 py-2 text-center">Pronós.</th>
+                  <th className="px-3 py-2 text-right">Puntos</th>
+                  <th className="px-3 py-2 text-right">Alta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u, i) => (
+                  <tr key={u.id} className="border-t border-slate-100">
+                    <td className="px-3 py-2 text-slate-400">{i + 1}</td>
+                    <td className="px-3 py-2 font-medium">
+                      {u.username}
+                      {u.is_admin && (
+                        <span className="ml-1 rounded bg-amber-100 px-1 text-[10px] font-semibold text-amber-700">
+                          admin
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-slate-500">{u.email}</td>
+                    <td className="px-3 py-2 text-center text-slate-500">
+                      {u.predictions_count}
+                    </td>
+                    <td className="px-3 py-2 text-right font-semibold text-pitch">
+                      {u.total_points}
+                    </td>
+                    <td className="px-3 py-2 text-right text-xs text-slate-400">
+                      {new Intl.DateTimeFormat("es-AR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                      }).format(new Date(u.created_at))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Cargar resultados */}
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Cargar resultados
+        </h2>
+        {loading ? (
+          <p className="text-slate-400">Cargando…</p>
+        ) : (
+          <div className="space-y-2">
+            {matches.map((m) => (
+              <AdminMatchRow key={m.id} match={m} onSaved={load} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
