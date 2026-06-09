@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getDb, ensureIndexes } from "@/lib/mongodb";
 import { getCurrentUser } from "@/lib/auth";
-import { LeagueDoc } from "@/lib/types";
+import { COMPETITIONS, LeagueDoc } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -34,26 +34,30 @@ export async function GET(req: NextRequest) {
       id: l._id!.toString(),
       name: l.name,
       code: l.code,
+      competition: l.competition ?? "mundial",
       members_count: l.members.length,
       is_owner: l.owner_id.toString() === user.id,
     })),
   });
 }
 
-// POST /api/leagues  → crea una liga privada. Body: { name }
+// POST /api/leagues  → crea una liga privada. Body: { name, competition }
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser(req);
   if (!user) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const { name } = await req.json();
+  const { name, competition } = await req.json();
   if (!name || String(name).trim().length < 3) {
     return NextResponse.json(
       { error: "El nombre debe tener al menos 3 caracteres" },
       { status: 400 }
     );
   }
+
+  const validComps = COMPETITIONS.map((c) => c.slug);
+  const comp = validComps.includes(competition) ? competition : "mundial";
 
   await ensureIndexes();
   const db = await getDb();
@@ -64,6 +68,7 @@ export async function POST(req: NextRequest) {
     const league: LeagueDoc = {
       name: String(name).trim(),
       code: genCode(),
+      competition: comp,
       owner_id: ownerOid,
       members: [ownerOid],
       created_at: new Date(),
@@ -78,6 +83,7 @@ export async function POST(req: NextRequest) {
             id: insertedId.toString(),
             name: league.name,
             code: league.code,
+            competition: league.competition,
           },
         },
         { status: 201 }

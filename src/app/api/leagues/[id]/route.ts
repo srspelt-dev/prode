@@ -37,13 +37,18 @@ export async function GET(
     );
   }
 
-  const leaderboard = await computeLeaderboard(db, league.members);
+  const competition = league.competition ?? "mundial";
+  const leaderboard = await computeLeaderboard(db, {
+    userIds: league.members,
+    competition,
+  });
 
   return NextResponse.json({
     league: {
       id: league._id!.toString(),
       name: league.name,
       code: league.code,
+      competition,
       members_count: league.members.length,
       is_owner: league.owner_id.toString() === user.id,
     },

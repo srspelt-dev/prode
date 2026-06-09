@@ -6,6 +6,8 @@ import ScoreBadge from "./ScoreBadge";
 
 export interface MatchVM {
   id: string;
+  competition?: string;
+  is_manual?: boolean;
   phase: string;
   group: string | null;
   home_team: string;

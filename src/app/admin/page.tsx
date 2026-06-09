@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiGet, apiPost, apiPut } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import type { MatchVM } from "@/components/MatchCard";
-import type { PublicUser } from "@/lib/types";
+import { COMPETITIONS, competitionLabel, type PublicUser } from "@/lib/types";
 
 interface AdminUser {
   id: string;
@@ -79,6 +79,9 @@ export default function AdminPage() {
       </div>
 
       {msg && <p className="text-sm text-pitch">{msg}</p>}
+
+      {/* Crear partido a mano (amistosos, etc.) */}
+      <CreateMatch onCreated={load} />
 
       {/* Usuarios registrados */}
       <section className="space-y-2">
@@ -186,10 +189,26 @@ function AdminMatchRow({
     }
   }
 
+  async function remove() {
+    if (
+      !window.confirm(
+        `¿Borrar ${match.home_team} vs ${match.away_team}? Se eliminan también sus pronósticos.`
+      )
+    )
+      return;
+    await apiDelete(`/matches/${match.id}`);
+    onSaved();
+  }
+
   return (
     <div className="card flex flex-wrap items-center gap-2 p-3 text-sm">
       <div className="min-w-[180px] flex-1 font-medium">
         {match.home_team} vs {match.away_team}
+        {match.competition && (
+          <span className="ml-2 rounded bg-slate-100 px-1 text-[10px] text-slate-500">
+            {competitionLabel(match.competition)}
+          </span>
+        )}
         {match.status === "finished" && (
           <span className="ml-2 text-xs text-emerald-600">✓ cargado</span>
         )}
@@ -224,7 +243,113 @@ function AdminMatchRow({
       >
         {saving ? "..." : "Cargar"}
       </button>
+      {match.is_manual && (
+        <button
+          className="px-2 text-xs text-red-400 hover:text-red-600"
+          onClick={remove}
+          title="Borrar partido manual"
+        >
+          🗑
+        </button>
+      )}
     </div>
+  );
+}
+
+function CreateMatch({ onCreated }: { onCreated: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [home, setHome] = useState("");
+  const [away, setAway] = useState("");
+  const [datetime, setDatetime] = useState("");
+  const [competition, setCompetition] = useState("amistosos");
+  const [msg, setMsg] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg("");
+    if (!home || !away || !datetime) {
+      setMsg("Completá equipos y fecha/hora");
+      return;
+    }
+    setSaving(true);
+    try {
+      // El input datetime-local viene en hora local → lo convertimos a ISO (UTC)
+      await apiPost("/matches", {
+        home_team: home,
+        away_team: away,
+        kickoff_at: new Date(datetime).toISOString(),
+        competition,
+        phase: competition === "mundial" ? "grupos" : "amistoso",
+      });
+      setMsg("¡Partido creado!");
+      setHome("");
+      setAway("");
+      setDatetime("");
+      onCreated();
+    } catch (e: any) {
+      setMsg(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="space-y-2">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="text-sm font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-600"
+      >
+        Crear partido a mano (amistoso) {open ? "▲" : "▼"}
+      </button>
+      {open && (
+        <form onSubmit={submit} className="card space-y-3 p-4">
+          <div className="flex gap-2">
+            <input
+              className="input"
+              placeholder="Local (ej: Argentina)"
+              value={home}
+              onChange={(e) => setHome(e.target.value)}
+            />
+            <input
+              className="input"
+              placeholder="Visitante (ej: Brasil)"
+              value={away}
+              onChange={(e) => setAway(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <label className="flex-1 text-xs text-slate-500">
+              Fecha y hora
+              <input
+                type="datetime-local"
+                className="input mt-1"
+                value={datetime}
+                onChange={(e) => setDatetime(e.target.value)}
+              />
+            </label>
+            <label className="flex-1 text-xs text-slate-500">
+              Competición
+              <select
+                className="input mt-1"
+                value={competition}
+                onChange={(e) => setCompetition(e.target.value)}
+              >
+                {COMPETITIONS.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {msg && <p className="text-sm text-pitch">{msg}</p>}
+          <button type="submit" className="btn-primary" disabled={saving}>
+            {saving ? "..." : "Crear partido"}
+          </button>
+        </form>
+      )}
+    </section>
   );
 }
 

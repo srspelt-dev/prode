@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 
 export type MatchPhase =
+  | "amistoso"
   | "grupos"
   | "treintaidosavos"
   | "octavos"
@@ -11,6 +12,18 @@ export type MatchPhase =
 
 export type MatchStatus = "upcoming" | "live" | "finished";
 
+// Competiciones: una liga elige una y solo suma puntos de partidos de esa competición.
+export const COMPETITIONS = [
+  { slug: "mundial", label: "Mundial 2026" },
+  { slug: "amistosos", label: "Amistosos" },
+] as const;
+
+export type CompetitionSlug = (typeof COMPETITIONS)[number]["slug"];
+
+export function competitionLabel(slug: string): string {
+  return COMPETITIONS.find((c) => c.slug === slug)?.label ?? slug;
+}
+
 export interface MatchResult {
   home_score: number | null;
   away_score: number | null;
@@ -19,7 +32,8 @@ export interface MatchResult {
 
 export interface MatchDoc {
   _id?: ObjectId;
-  external_id: number; // id de API-Football
+  external_id: number; // id de la API (negativo si es manual)
+  competition: string; // "mundial" | "amistosos" | ...
   phase: MatchPhase;
   group: string | null;
   home_team: string;
@@ -57,6 +71,7 @@ export interface LeagueDoc {
   _id?: ObjectId;
   name: string;
   code: string;
+  competition: string; // de qué es la liga: "mundial" | "amistosos" | ...
   owner_id: ObjectId;
   members: ObjectId[];
   created_at: Date;

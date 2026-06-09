@@ -45,6 +45,7 @@ function parseMatch(m: FdMatch): MatchDoc {
 
   return {
     external_id: m.id,
+    competition: "mundial",
     phase,
     group,
     home_team: m.homeTeam?.name ?? "Por definir",

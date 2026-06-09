@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { COMPETITIONS, competitionLabel } from "@/lib/types";
 
 interface LeagueVM {
   id: string;
   name: string;
   code: string;
+  competition: string;
   members_count: number;
   is_owner: boolean;
 }
@@ -18,6 +20,7 @@ export default function LigasPage() {
   const [leagues, setLeagues] = useState<LeagueVM[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
+  const [newComp, setNewComp] = useState("mundial");
   const [joinCode, setJoinCode] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -35,7 +38,10 @@ export default function LigasPage() {
   async function create() {
     setMsg("");
     try {
-      const { league } = await apiPost("/leagues", { name: newName });
+      const { league } = await apiPost("/leagues", {
+        name: newName,
+        competition: newComp,
+      });
       setMsg(`Liga creada. Código: ${league.code}`);
       setNewName("");
       load();
@@ -68,6 +74,20 @@ export default function LigasPage() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
+          <label className="block text-xs text-slate-500">
+            ¿De qué es la liga?
+            <select
+              className="input mt-1"
+              value={newComp}
+              onChange={(e) => setNewComp(e.target.value)}
+            >
+              {COMPETITIONS.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <button className="btn-primary w-full" onClick={create}>
             Crear
           </button>
@@ -109,7 +129,12 @@ export default function LigasPage() {
                 className="card flex items-center justify-between p-3 hover:bg-slate-50"
               >
                 <div>
-                  <div className="font-medium">{l.name}</div>
+                  <div className="flex items-center gap-2 font-medium">
+                    {l.name}
+                    <span className="rounded bg-pitch/10 px-1.5 py-0.5 text-[10px] font-semibold text-pitch">
+                      {competitionLabel(l.competition)}
+                    </span>
+                  </div>
                   <div className="text-xs text-slate-400">
                     {l.members_count} miembros · código{" "}
                     <span className="font-mono">{l.code}</span>

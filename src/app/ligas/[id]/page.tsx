@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiGet } from "@/lib/api-client";
 import Leaderboard from "@/components/Leaderboard";
-import type { LeaderboardRow, PublicUser } from "@/lib/types";
+import { competitionLabel, type LeaderboardRow, type PublicUser } from "@/lib/types";
 
 interface LeagueInfo {
   id: string;
   name: string;
   code: string;
+  competition: string;
   members_count: number;
   is_owner: boolean;
 }
@@ -49,7 +50,12 @@ export default function LigaDetallePage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold">{league.name}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold">{league.name}</h1>
+          <span className="rounded bg-pitch/10 px-2 py-0.5 text-xs font-semibold text-pitch">
+            {competitionLabel(league.competition)}
+          </span>
+        </div>
         <p className="text-sm text-slate-400">
           {league.members_count} miembros · Compartí el código{" "}
           <span className="font-mono font-semibold text-slate-600">

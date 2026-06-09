@@ -1,22 +1,42 @@
 import { Db, ObjectId } from "mongodb";
 import { LeaderboardRow, UserDoc } from "./types";
 
+interface LeaderboardOpts {
+  userIds?: ObjectId[]; // restringir a estos usuarios (tabla de una liga)
+  competition?: string; // contar solo partidos de esta competición
+}
+
 // Calcula el ranking sumando points_earned por usuario.
-// Si se pasa userIds, restringe a esos usuarios (tabla de una liga) e incluye
-// a TODOS ellos aunque tengan 0 puntos, para poder ver quiénes se sumaron.
+// - Con userIds: incluye a TODOS esos usuarios aunque tengan 0 puntos.
+// - Con competition: solo suma puntos de partidos de esa competición.
 export async function computeLeaderboard(
   db: Db,
-  userIds?: ObjectId[]
+  opts: LeaderboardOpts = {}
 ): Promise<LeaderboardRow[]> {
+  const { userIds, competition } = opts;
+
   const predMatch: Record<string, unknown> = { points_earned: { $ne: null } };
   if (userIds) {
     predMatch.user_id = { $in: userIds };
   }
 
+  // Si hay competición, limitar a los partidos de esa competición
+  let matchFilter: Record<string, unknown> = {};
+  if (competition) {
+    const ids = await db
+      .collection("matches")
+      .find({ competition })
+      .project({ _id: 1 })
+      .toArray();
+    const matchIds = ids.map((m: any) => m._id);
+    predMatch.match_id = { $in: matchIds };
+    matchFilter = { competition };
+  }
+
   // Último partido terminado (para la columna "puntos del último partido")
   const lastFinished = await db
     .collection("matches")
-    .find({ status: "finished" })
+    .find({ status: "finished", ...matchFilter })
     .sort({ kickoff_at: -1 })
     .limit(1)
     .toArray();
@@ -34,9 +54,7 @@ export async function computeLeaderboard(
           last_points: {
             $sum: {
               $cond: [
-                lastMatchId
-                  ? { $eq: ["$match_id", lastMatchId] }
-                  : false,
+                lastMatchId ? { $eq: ["$match_id", lastMatchId] } : false,
                 "$points_earned",
                 0,
               ],

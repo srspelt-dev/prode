@@ -27,3 +27,6 @@ export const apiPost = <T = any>(path: string, body?: unknown) =>
 
 export const apiPut = <T = any>(path: string, body?: unknown) =>
   api<T>(path, { method: "PUT", body: JSON.stringify(body ?? {}) });
+
+export const apiDelete = <T = any>(path: string) =>
+  api<T>(path, { method: "DELETE" });
