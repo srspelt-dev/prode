@@ -97,16 +97,21 @@ Lógica en [src/lib/scoring.ts](src/lib/scoring.ts). En partidos definidos por p
 
 ### Cron automático
 
-Definido en [vercel.json](vercel.json):
+Definido en [vercel.json](vercel.json) (compatible con Vercel Hobby/gratis, 1 cron/día):
 
 | Job | Frecuencia | Qué hace |
 |---|---|---|
-| `/api/cron/sync?mode=live` | cada 2 min | actualiza partidos en vivo y calcula puntos al terminar |
 | `/api/cron/sync?mode=all` | 04:00 UTC | refresca el fixture completo |
 
-> ⚠️ **Vercel Hobby (gratis)** solo permite cron **1 vez por día**. El cron de 2 min requiere plan **Pro**.
-> Alternativa gratis: un cron externo (p. ej. [cron-job.org](https://cron-job.org)) que pegue cada minuto a
-> `https://TU-APP.vercel.app/api/cron/sync?mode=live` con el header `Authorization: Bearer <CRON_SECRET>`.
+**Actualización en vivo (gratis):** Vercel Hobby solo permite 1 cron/día, así que para los partidos
+en vivo se usa un **cron externo gratis** como [cron-job.org](https://cron-job.org):
+
+1. Creá un job que pegue cada 1-2 min a:
+   `https://TU-APP.vercel.app/api/cron/sync?mode=live`
+2. En "Headers" agregá: `Authorization: Bearer <CRON_SECRET>`
+3. El endpoint ya se autoprotege con `CRON_SECRET` y no gasta cuota si no hay partidos próximos.
+
+(El cron de 2 min nativo de Vercel requiere plan Pro; con el cron externo queda todo gratis.)
 
 ### Cuota de la API
 
