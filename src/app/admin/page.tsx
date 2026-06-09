@@ -98,6 +98,7 @@ export default function AdminPage() {
                   <th className="px-3 py-2 text-center">Pronós.</th>
                   <th className="px-3 py-2 text-right">Puntos</th>
                   <th className="px-3 py-2 text-right">Alta</th>
+                  <th className="px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody>
@@ -124,6 +125,9 @@ export default function AdminPage() {
                         day: "2-digit",
                         month: "2-digit",
                       }).format(new Date(u.created_at))}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <ResetPassword userId={u.id} username={u.username} />
                     </td>
                   </tr>
                 ))}
@@ -221,5 +225,50 @@ function AdminMatchRow({
         {saving ? "..." : "Cargar"}
       </button>
     </div>
+  );
+}
+
+function ResetPassword({
+  userId,
+  username,
+}: {
+  userId: string;
+  username: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function reset() {
+    const pwd = window.prompt(
+      `Nueva contraseña para ${username} (mín. 6 caracteres):`
+    );
+    if (!pwd) return;
+    if (pwd.length < 6) {
+      alert("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+    setBusy(true);
+    try {
+      await apiPost(`/admin/users/${userId}/reset-password`, {
+        new_password: pwd,
+      });
+      setDone(true);
+      alert(`Listo. La nueva contraseña de ${username} es: ${pwd}`);
+    } catch (e: any) {
+      alert("Error: " + e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={reset}
+      disabled={busy}
+      className="text-xs text-slate-400 hover:text-pitch"
+      title="Resetear contraseña"
+    >
+      {busy ? "..." : done ? "✓" : "🔑"}
+    </button>
   );
 }

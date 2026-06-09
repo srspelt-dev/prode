@@ -57,8 +57,56 @@ export default function LigaDetallePage() {
           </span>{" "}
           para que se unan.
         </p>
+        <ShareLeague name={league.name} code={league.code} />
       </div>
       <Leaderboard rows={rows} highlightUserId={me?.id} />
+    </div>
+  );
+}
+
+function ShareLeague({ name, code }: { name: string; code: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function buildMessage(): string {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    return (
+      `⚽ ¡Te invito al Prode Mundial 2026!\n\n` +
+      `Sumate a mi liga "${name}".\n` +
+      `1) Entrá a ${origin}\n` +
+      `2) Creá tu cuenta\n` +
+      `3) En "Ligas" → "Unirse con código" poné: ${code}\n\n` +
+      `¡A ver quién la pega más! 🏆`
+    );
+  }
+
+  function shareWhatsApp() {
+    const url = `https://wa.me/?text=${encodeURIComponent(buildMessage())}`;
+    window.open(url, "_blank");
+  }
+
+  async function copyMessage() {
+    try {
+      await navigator.clipboard.writeText(buildMessage());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* noop */
+    }
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      <button
+        onClick={shareWhatsApp}
+        className="btn px-3 py-1.5 text-sm font-medium text-white"
+        style={{ backgroundColor: "#25D366" }}
+      >
+        Compartir por WhatsApp
+      </button>
+      <button onClick={copyMessage} className="btn-ghost px-3 py-1.5 text-sm">
+        {copied ? "¡Copiado!" : "Copiar invitación"}
+      </button>
     </div>
   );
 }

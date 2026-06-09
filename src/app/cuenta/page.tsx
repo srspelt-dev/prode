@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiGet } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
 import ScoreBadge from "@/components/ScoreBadge";
 import type { PublicUser } from "@/lib/types";
 
@@ -58,6 +58,8 @@ export default function CuentaPage() {
         </div>
       </div>
 
+      <ChangePassword />
+
       <section className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
           Mis pronósticos
@@ -96,5 +98,70 @@ export default function CuentaPage() {
         )}
       </section>
     </div>
+  );
+}
+
+function ChangePassword() {
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg("");
+    setErr("");
+    setSaving(true);
+    try {
+      await apiPost("/auth/change-password", {
+        current_password: current,
+        new_password: next,
+      });
+      setMsg("Contraseña actualizada ✅");
+      setCurrent("");
+      setNext("");
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="space-y-2">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="text-sm font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-600"
+      >
+        Cambiar contraseña {open ? "▲" : "▼"}
+      </button>
+      {open && (
+        <form onSubmit={submit} className="card space-y-3 p-4">
+          <input
+            className="input"
+            type="password"
+            placeholder="Contraseña actual"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="password"
+            placeholder="Nueva contraseña (mín. 6)"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            required
+          />
+          {err && <p className="text-sm text-red-600">{err}</p>}
+          {msg && <p className="text-sm text-pitch">{msg}</p>}
+          <button type="submit" className="btn-primary" disabled={saving}>
+            {saving ? "..." : "Actualizar contraseña"}
+          </button>
+        </form>
+      )}
+    </section>
   );
 }

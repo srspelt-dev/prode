@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { apiPost } from "@/lib/api-client";
+import { useEffect, useState } from "react";
+import { apiGet, apiPost } from "@/lib/api-client";
 import ScoreBadge from "./ScoreBadge";
 
 export interface MatchVM {
@@ -28,6 +28,13 @@ export interface MatchVM {
   } | null;
 }
 
+interface OtherPrediction {
+  username: string;
+  home_score: number;
+  away_score: number;
+  points_earned: number | null;
+}
+
 function fmtTime(iso: string): string {
   return new Intl.DateTimeFormat("es-AR", {
     weekday: "short",
@@ -44,6 +51,41 @@ const STATUS_LABEL: Record<string, string> = {
   finished: "Finalizado",
 };
 
+// Cuenta regresiva hasta el cierre del pronóstico
+function Countdown({ deadline }: { deadline: string }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const ms = new Date(deadline).getTime() - now;
+  if (ms <= 0) {
+    return (
+      <span className="text-xs font-medium text-red-500">Plazo cerrado</span>
+    );
+  }
+  const totalSec = Math.floor(ms / 1000);
+  const d = Math.floor(totalSec / 86400);
+  const h = Math.floor((totalSec % 86400) / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+
+  let txt: string;
+  if (d > 0) txt = `${d}d ${h}h ${m}m`;
+  else if (h > 0) txt = `${h}h ${m}m`;
+  else txt = `${m}m ${s}s`;
+
+  const urgent = ms < 30 * 60 * 1000; // menos de 30 min
+  return (
+    <span
+      className={`text-xs font-medium ${urgent ? "text-amber-600" : "text-slate-400"}`}
+    >
+      Cierra en {txt}
+    </span>
+  );
+}
+
 export default function MatchCard({ match }: { match: MatchVM }) {
   const [home, setHome] = useState<string>(
     match.my_prediction ? String(match.my_prediction.home_score) : ""
@@ -54,6 +96,13 @@ export default function MatchCard({ match }: { match: MatchVM }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const [saved, setSaved] = useState<boolean>(!!match.my_prediction);
+
+  // Modo espectador
+  const [showOthers, setShowOthers] = useState(false);
+  const [others, setOthers] = useState<OtherPrediction[] | null>(null);
+  const [loadingOthers, setLoadingOthers] = useState(false);
+
+  const deadlinePassed = new Date(match.deadline_at).getTime() <= Date.now();
 
   async function save() {
     setMsg("");
@@ -76,6 +125,24 @@ export default function MatchCard({ match }: { match: MatchVM }) {
       setMsg(e.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function toggleOthers() {
+    const next = !showOthers;
+    setShowOthers(next);
+    if (next && others === null) {
+      setLoadingOthers(true);
+      try {
+        const d = await apiGet<{ predictions: OtherPrediction[] }>(
+          `/predictions/${match.id}`
+        );
+        setOthers(d.predictions);
+      } catch {
+        setOthers([]);
+      } finally {
+        setLoadingOthers(false);
+      }
     }
   }
 
@@ -112,8 +179,14 @@ export default function MatchCard({ match }: { match: MatchVM }) {
         <TeamSide name={match.away_team} logo={match.away_logo} reverse />
       </div>
 
-      <div className="mt-3 text-center text-xs text-slate-400">
-        {fmtTime(match.kickoff_at)}
+      <div className="mt-3 flex items-center justify-center gap-2 text-center text-xs text-slate-400">
+        <span>{fmtTime(match.kickoff_at)}</span>
+        {match.status === "upcoming" && (
+          <>
+            <span>·</span>
+            <Countdown deadline={match.deadline_at} />
+          </>
+        )}
       </div>
 
       {/* Zona de pronóstico */}
@@ -164,8 +237,52 @@ export default function MatchCard({ match }: { match: MatchVM }) {
               : "No pronosticaste este partido"}
           </div>
         )}
-        {msg && (
-          <p className="mt-2 text-center text-xs text-pitch">{msg}</p>
+        {msg && <p className="mt-2 text-center text-xs text-pitch">{msg}</p>}
+
+        {/* Modo espectador: ver pronósticos de todos (tras el cierre) */}
+        {deadlinePassed && (
+          <div className="mt-3 border-t border-slate-100 pt-2 text-center">
+            <button
+              onClick={toggleOthers}
+              className="text-xs font-medium text-pitch hover:underline"
+            >
+              {showOthers
+                ? "Ocultar pronósticos"
+                : "👀 Ver pronósticos de todos"}
+            </button>
+            {showOthers && (
+              <div className="mt-2 text-left">
+                {loadingOthers ? (
+                  <p className="text-center text-xs text-slate-400">
+                    Cargando…
+                  </p>
+                ) : others && others.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {others.map((o, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between py-1.5 text-sm"
+                      >
+                        <span className="text-slate-600">{o.username}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-medium">
+                            {o.home_score}-{o.away_score}
+                          </span>
+                          {match.status === "finished" && (
+                            <ScoreBadge points={o.points_earned} />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-xs text-slate-400">
+                    Nadie pronosticó este partido.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
