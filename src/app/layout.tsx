@@ -29,7 +29,10 @@ export default function RootLayout({
       <body>
         <ServiceWorkerRegister />
         <NavBar />
-        <main className="mx-auto max-w-3xl px-4 py-6">{children}</main>
+        {/* pb extra en mobile para no quedar tapado por la barra inferior */}
+        <main className="mx-auto max-w-3xl px-4 py-6 pb-24 sm:pb-6">
+          {children}
+        </main>
       </body>
     </html>
   );
