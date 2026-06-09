@@ -1,8 +1,9 @@
 import { Db, ObjectId } from "mongodb";
-import { LeaderboardRow } from "./types";
+import { LeaderboardRow, UserDoc } from "./types";
 
 // Calcula el ranking sumando points_earned por usuario.
-// Si se pasa userIds, restringe a esos usuarios (tabla de una liga).
+// Si se pasa userIds, restringe a esos usuarios (tabla de una liga) e incluye
+// a TODOS ellos aunque tengan 0 puntos, para poder ver quiénes se sumaron.
 export async function computeLeaderboard(
   db: Db,
   userIds?: ObjectId[]
@@ -56,11 +57,43 @@ export async function computeLeaderboard(
     ])
     .toArray();
 
-  return rows.map((r: any) => ({
+  const scored: LeaderboardRow[] = rows.map((r: any) => ({
     user_id: r._id.toString(),
     username: r.user.username,
     total_points: r.total_points,
     predictions_count: r.predictions_count,
     last_points: lastMatchId ? r.last_points : null,
   }));
+
+  // Para una liga: incluir a todos los miembros, aun con 0 puntos.
+  if (userIds) {
+    const scoredById = new Map(scored.map((r) => [r.user_id, r]));
+    const members = await db
+      .collection<UserDoc>("users")
+      .find({ _id: { $in: userIds } })
+      .toArray();
+
+    const all: LeaderboardRow[] = members.map((u) => {
+      const id = u._id!.toString();
+      return (
+        scoredById.get(id) ?? {
+          user_id: id,
+          username: u.username,
+          total_points: 0,
+          predictions_count: 0,
+          last_points: lastMatchId ? 0 : null,
+        }
+      );
+    });
+
+    all.sort(
+      (a, b) =>
+        b.total_points - a.total_points ||
+        b.predictions_count - a.predictions_count ||
+        a.username.localeCompare(b.username)
+    );
+    return all;
+  }
+
+  return scored;
 }
