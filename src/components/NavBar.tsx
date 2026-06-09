@@ -88,7 +88,10 @@ export default function NavBar() {
 
       {/* Barra inferior (solo mobile) */}
       {loaded && user && (
-        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white sm:hidden">
+        <nav
+          className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white sm:hidden"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
           <div className="mx-auto flex max-w-3xl">
             {navItems.map((l) => {
               const active = pathname.startsWith(l.href);
