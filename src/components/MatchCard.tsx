@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
-import { Plus, Minus } from "lucide-react";
 import { countryFlag, teamInitials } from "@/lib/flags";
 import { toast } from "@/lib/toast";
 import ScoreBadge from "./ScoreBadge";
@@ -95,40 +94,6 @@ function Countdown({ deadline }: { deadline: string }) {
     >
       Cierra en {txt}
     </span>
-  );
-}
-
-// Selector de marcador con botones +/−
-function Stepper({
-  value,
-  onChange,
-}: {
-  value: number | null;
-  onChange: (v: number) => void;
-}) {
-  const v = value ?? 0;
-  return (
-    <div className="inline-flex items-center overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(0, v - 1))}
-        className="px-2.5 py-1.5 text-slate-500 hover:bg-slate-100 active:scale-95 dark:hover:bg-slate-800"
-        aria-label="Menos"
-      >
-        <Minus size={16} />
-      </button>
-      <span className="w-8 text-center text-lg font-bold tabular-nums">
-        {value === null ? "–" : value}
-      </span>
-      <button
-        type="button"
-        onClick={() => onChange(Math.min(20, v + 1))}
-        className="px-2.5 py-1.5 text-slate-500 hover:bg-slate-100 active:scale-95 dark:hover:bg-slate-800"
-        aria-label="Más"
-      >
-        <Plus size={16} />
-      </button>
-    </div>
   );
 }
 
@@ -257,9 +222,27 @@ export default function MatchCard({ match }: { match: MatchVM }) {
             <span className="w-full text-center text-xs text-slate-500 sm:w-auto">
               Tu pronóstico:
             </span>
-            <Stepper value={home} onChange={setHome} />
+            <input
+              className="score-input"
+              inputMode="numeric"
+              value={home === null ? "" : String(home)}
+              onChange={(e) => {
+                const d = e.target.value.replace(/\D/g, "").slice(0, 2);
+                setHome(d === "" ? null : parseInt(d, 10));
+              }}
+              maxLength={2}
+            />
             <span className="font-bold text-slate-400">-</span>
-            <Stepper value={away} onChange={setAway} />
+            <input
+              className="score-input"
+              inputMode="numeric"
+              value={away === null ? "" : String(away)}
+              onChange={(e) => {
+                const d = e.target.value.replace(/\D/g, "").slice(0, 2);
+                setAway(d === "" ? null : parseInt(d, 10));
+              }}
+              maxLength={2}
+            />
             <button
               className="btn-primary ml-1 px-3 py-2 text-xs"
               onClick={save}
