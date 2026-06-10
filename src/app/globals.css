@@ -2,20 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
 }
 
-body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+h1,
+h2,
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
 }
 
 .card {
-  @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
 }
 
 .btn {
-  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition;
+  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition active:scale-[0.97];
 }
 
 .btn-primary {
@@ -23,15 +25,20 @@ body {
 }
 
 .btn-ghost {
-  @apply btn border border-slate-300 bg-white hover:bg-slate-100;
+  @apply btn border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700;
 }
 
 .input {
-  @apply w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-pitch focus:ring-1 focus:ring-pitch;
+  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-pitch focus:ring-1 focus:ring-pitch dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100;
 }
 
 .score-input {
-  @apply w-12 rounded-lg border border-slate-300 text-center text-lg font-bold outline-none focus:border-pitch focus:ring-1 focus:ring-pitch;
+  @apply w-12 rounded-lg border border-slate-300 bg-white text-center text-lg font-bold outline-none focus:border-pitch focus:ring-1 focus:ring-pitch dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100;
+}
+
+/* Skeleton de carga */
+.skeleton {
+  @apply animate-pulse rounded-md bg-slate-200 dark:bg-slate-800;
 }
 
 @keyframes toastIn {
@@ -43,4 +50,19 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-card-in {
+  animation: cardIn 0.25s ease-out both;
 }

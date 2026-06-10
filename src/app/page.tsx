@@ -62,7 +62,7 @@ export default function HomePage() {
       </div>
 
       <div className="card p-6">
-        <div className="mb-4 flex rounded-lg bg-slate-100 p-1 text-sm">
+        <div className="mb-4 flex rounded-lg bg-slate-100 p-1 text-sm dark:bg-slate-800">
           {(["login", "register"] as const).map((m) => (
             <button
               key={m}
@@ -71,7 +71,9 @@ export default function HomePage() {
                 setError("");
               }}
               className={`flex-1 rounded-md py-1.5 font-medium ${
-                mode === m ? "bg-white shadow-sm" : "text-slate-500"
+                mode === m
+                  ? "bg-white shadow-sm dark:bg-slate-700"
+                  : "text-slate-500"
               }`}
             >
               {m === "login" ? "Ingresar" : "Crear cuenta"}

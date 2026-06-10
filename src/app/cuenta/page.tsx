@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet, apiPost } from "@/lib/api-client";
 import ScoreBadge from "@/components/ScoreBadge";
+import Avatar from "@/components/Avatar";
 import type { PublicUser } from "@/lib/types";
 
 interface PredVM {
@@ -45,17 +46,30 @@ export default function CuentaPage() {
 
   if (loading) return <p className="text-slate-400">Cargando…</p>;
 
+  const stats = computeStats(preds);
+
   return (
     <div className="space-y-5">
-      <div className="card flex items-center justify-between p-4">
-        <div>
-          <h1 className="text-lg font-bold">{user?.username}</h1>
-          <p className="text-sm text-slate-400">{user?.email}</p>
+      <div className="card flex items-center gap-4 p-4">
+        <Avatar name={user?.username ?? "?"} size={52} />
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-lg font-bold">{user?.username}</h1>
+          <p className="truncate text-sm text-slate-400">{user?.email}</p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-pitch">{total}</div>
-          <div className="text-xs text-slate-400">puntos totales</div>
+          <div className="text-2xl font-bold text-pitch dark:text-pitch-light">
+            {total}
+          </div>
+          <div className="text-xs text-slate-400">puntos</div>
         </div>
+      </div>
+
+      {/* Estadísticas */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Precisión" value={`${stats.precision}%`} icon="🎯" />
+        <Stat label="Aciertos" value={`${stats.aciertos}/${stats.finished}`} icon="✅" />
+        <Stat label="Exactos" value={stats.exactos} icon="🎰" />
+        <Stat label="Racha" value={stats.racha} icon="🔥" />
       </div>
 
       <ChangePassword />
@@ -69,7 +83,7 @@ export default function CuentaPage() {
             Todavía no hiciste ningún pronóstico.
           </p>
         ) : (
-          <div className="card divide-y divide-slate-100">
+          <div className="card divide-y divide-slate-100 dark:divide-slate-800">
             {preds.map((p) => (
               <div
                 key={p.match_id}
@@ -97,6 +111,51 @@ export default function CuentaPage() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function computeStats(preds: PredVM[]) {
+  const finished = preds.filter(
+    (p) => p.status === "finished" && p.points_earned != null
+  );
+  const aciertos = finished.filter((p) => (p.points_earned ?? 0) > 0).length;
+  const exactos = finished.filter((p) => p.points_earned === 6).length;
+  const precision = finished.length
+    ? Math.round((aciertos / finished.length) * 100)
+    : 0;
+
+  // Racha: aciertos consecutivos más recientes (orden cronológico por kickoff)
+  const chrono = [...finished].sort(
+    (a, b) =>
+      new Date(a.kickoff_at ?? 0).getTime() -
+      new Date(b.kickoff_at ?? 0).getTime()
+  );
+  let racha = 0;
+  for (let i = chrono.length - 1; i >= 0; i--) {
+    if ((chrono[i].points_earned ?? 0) > 0) racha++;
+    else break;
+  }
+
+  return { precision, aciertos, finished: finished.length, exactos, racha };
+}
+
+function Stat({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  icon: string;
+}) {
+  return (
+    <div className="card p-3 text-center">
+      <div className="text-xl">{icon}</div>
+      <div className="mt-1 text-xl font-bold">{value}</div>
+      <div className="text-[11px] uppercase tracking-wide text-slate-400">
+        {label}
+      </div>
     </div>
   );
 }

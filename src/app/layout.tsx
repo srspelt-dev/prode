@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import Toaster from "@/components/Toaster";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-display" });
 
 export const metadata: Metadata = {
   title: "Prode Mundial 2026",
@@ -21,13 +25,25 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// Evita el "flash" de tema: setea la clase dark antes de pintar.
+const themeScript = `
+(function(){try{
+  var t = localStorage.getItem('theme');
+  var dark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (dark) document.documentElement.classList.add('dark');
+}catch(e){}})();
+`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" className={`${inter.variable} ${outfit.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         <ServiceWorkerRegister />
         <Toaster />

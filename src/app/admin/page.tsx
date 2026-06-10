@@ -93,7 +93,7 @@ export default function AdminPage() {
         ) : (
           <div className="card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-400">
+              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-400 dark:bg-slate-800/50">
                 <tr>
                   <th className="px-3 py-2">#</th>
                   <th className="px-3 py-2">Usuario</th>

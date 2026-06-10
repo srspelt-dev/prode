@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { Plus, Minus } from "lucide-react";
 import { countryFlag, teamInitials } from "@/lib/flags";
 import { toast } from "@/lib/toast";
 import ScoreBadge from "./ScoreBadge";
+import Avatar from "./Avatar";
 
 export interface MatchVM {
   id: string;
@@ -96,15 +98,48 @@ function Countdown({ deadline }: { deadline: string }) {
   );
 }
 
-export default function MatchCard({ match }: { match: MatchVM }) {
-  const [home, setHome] = useState<string>(
-    match.my_prediction ? String(match.my_prediction.home_score) : ""
+// Selector de marcador con botones +/−
+function Stepper({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (v: number) => void;
+}) {
+  const v = value ?? 0;
+  return (
+    <div className="inline-flex items-center overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, v - 1))}
+        className="px-2.5 py-1.5 text-slate-500 hover:bg-slate-100 active:scale-95 dark:hover:bg-slate-800"
+        aria-label="Menos"
+      >
+        <Minus size={16} />
+      </button>
+      <span className="w-8 text-center text-lg font-bold tabular-nums">
+        {value === null ? "–" : value}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(20, v + 1))}
+        className="px-2.5 py-1.5 text-slate-500 hover:bg-slate-100 active:scale-95 dark:hover:bg-slate-800"
+        aria-label="Más"
+      >
+        <Plus size={16} />
+      </button>
+    </div>
   );
-  const [away, setAway] = useState<string>(
-    match.my_prediction ? String(match.my_prediction.away_score) : ""
+}
+
+export default function MatchCard({ match }: { match: MatchVM }) {
+  const [home, setHome] = useState<number | null>(
+    match.my_prediction ? match.my_prediction.home_score : null
+  );
+  const [away, setAway] = useState<number | null>(
+    match.my_prediction ? match.my_prediction.away_score : null
   );
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState<string>("");
   const [saved, setSaved] = useState<boolean>(!!match.my_prediction);
 
   // Modo espectador
@@ -118,10 +153,7 @@ export default function MatchCard({ match }: { match: MatchVM }) {
   const [justSaved, setJustSaved] = useState(false);
 
   async function save() {
-    setMsg("");
-    const h = parseInt(home, 10);
-    const a = parseInt(away, 10);
-    if (Number.isNaN(h) || Number.isNaN(a)) {
+    if (home === null || away === null) {
       toast("Ingresá ambos marcadores", "error");
       return;
     }
@@ -129,13 +161,15 @@ export default function MatchCard({ match }: { match: MatchVM }) {
     try {
       await apiPost("/predictions", {
         match_id: match.id,
-        home_score: h,
-        away_score: a,
+        home_score: home,
+        away_score: away,
       });
       setSaved(true);
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 1500);
-      toast(`¡Pronóstico guardado! ${match.home_team} ${h}-${a} ${match.away_team}`);
+      toast(
+        `¡Pronóstico guardado! ${match.home_team} ${home}-${away} ${match.away_team}`
+      );
     } catch (e: any) {
       toast(e.message, "error");
     } finally {
@@ -166,8 +200,8 @@ export default function MatchCard({ match }: { match: MatchVM }) {
   const r = match.result;
 
   return (
-    <div className="card p-4">
-      <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
+    <div className="card animate-card-in p-4">
+      <div className="mb-2 flex items-center justify-between text-xs capitalize text-slate-400">
         <span>
           {match.phase}
           {match.group ? ` · Grupo ${match.group}` : ""}
@@ -217,27 +251,17 @@ export default function MatchCard({ match }: { match: MatchVM }) {
       </div>
 
       {/* Zona de pronóstico */}
-      <div className="mt-3 border-t border-slate-100 pt-3">
+      <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
         {match.can_predict ? (
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-xs text-slate-500">Tu pronóstico:</span>
-            <input
-              className="score-input"
-              inputMode="numeric"
-              value={home}
-              onChange={(e) => setHome(e.target.value.replace(/\D/g, ""))}
-              maxLength={2}
-            />
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="w-full text-center text-xs text-slate-500 sm:w-auto">
+              Tu pronóstico:
+            </span>
+            <Stepper value={home} onChange={setHome} />
             <span className="font-bold text-slate-400">-</span>
-            <input
-              className="score-input"
-              inputMode="numeric"
-              value={away}
-              onChange={(e) => setAway(e.target.value.replace(/\D/g, ""))}
-              maxLength={2}
-            />
+            <Stepper value={away} onChange={setAway} />
             <button
-              className="btn-primary ml-2 px-3 py-1.5 text-xs"
+              className="btn-primary ml-1 px-3 py-2 text-xs"
               onClick={save}
               disabled={saving}
             >
@@ -270,11 +294,10 @@ export default function MatchCard({ match }: { match: MatchVM }) {
               : "No pronosticaste este partido"}
           </div>
         )}
-        {msg && <p className="mt-2 text-center text-xs text-pitch">{msg}</p>}
 
         {/* Modo espectador: ver pronósticos de todos (tras el cierre) */}
         {deadlinePassed && (
-          <div className="mt-3 border-t border-slate-100 pt-2 text-center">
+          <div className="mt-3 border-t border-slate-100 pt-2 text-center dark:border-slate-800">
             <button
               onClick={toggleOthers}
               className="text-xs font-medium text-pitch hover:underline"
@@ -303,13 +326,14 @@ export default function MatchCard({ match }: { match: MatchVM }) {
                         {g.league_name}
                       </div>
                       {g.predictions.length > 0 ? (
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
                           {g.predictions.map((o, i) => (
                             <div
                               key={i}
                               className="flex items-center justify-between py-1.5 text-sm"
                             >
-                              <span className="text-slate-600">
+                              <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                <Avatar name={o.username} size={24} />
                                 {o.username}
                               </span>
                               <div className="flex items-center gap-2">

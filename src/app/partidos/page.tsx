@@ -74,7 +74,16 @@ export default function PartidosPage() {
     setSelected(new Date(y, m - 1, d));
   }
 
-  if (loading) return <p className="text-slate-400">Cargando partidos…</p>;
+  if (loading)
+    return (
+      <div className="space-y-4">
+        <div className="skeleton h-7 w-32" />
+        <div className="skeleton h-16 w-full" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="skeleton h-32 w-full" />
+        ))}
+      </div>
+    );
   if (error) return <p className="text-red-600">{error}</p>;
 
   if (matches.length === 0) {

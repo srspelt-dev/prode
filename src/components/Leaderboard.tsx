@@ -1,4 +1,5 @@
 import type { LeaderboardRow } from "@/lib/types";
+import Avatar from "./Avatar";
 
 const MEDAL = ["🥇", "🥈", "🥉"];
 
@@ -11,10 +12,13 @@ export default function Leaderboard({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-slate-400">
-        Todavía no hay puntos. ¡Cuando se jueguen los primeros partidos aparece
-        el ranking!
-      </p>
+      <div className="card p-8 text-center">
+        <div className="text-3xl">📊</div>
+        <p className="mt-2 text-sm text-slate-400">
+          Todavía no hay puntos. ¡Cuando se jueguen los primeros partidos
+          aparece el ranking!
+        </p>
+      </div>
     );
   }
 
@@ -26,12 +30,12 @@ export default function Leaderboard({
         return (
           <div
             key={r.user_id}
-            className={`flex items-center gap-3 border-b border-slate-100 px-3 py-2.5 last:border-0 ${
-              isMe ? "bg-pitch/5" : ""
+            className={`flex items-center gap-3 border-b border-slate-100 px-3 py-2.5 last:border-0 dark:border-slate-800 ${
+              isMe ? "bg-pitch/5 dark:bg-pitch/10" : ""
             }`}
           >
             {/* Posición / medalla */}
-            <div className="flex w-7 shrink-0 justify-center">
+            <div className="flex w-6 shrink-0 justify-center">
               {medal ? (
                 <span className="text-xl leading-none">{medal}</span>
               ) : (
@@ -41,14 +45,12 @@ export default function Leaderboard({
               )}
             </div>
 
+            <Avatar name={r.username} size={34} />
+
             {/* Nombre */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span
-                  className={`truncate font-medium ${i < 3 ? "text-slate-900" : "text-slate-700"}`}
-                >
-                  {r.username}
-                </span>
+                <span className="truncate font-medium">{r.username}</span>
                 {isMe && (
                   <span className="rounded bg-pitch px-1 text-[9px] font-bold uppercase text-white">
                     vos
@@ -65,7 +67,7 @@ export default function Leaderboard({
 
             {/* Puntos */}
             <div className="shrink-0 text-right">
-              <span className="text-lg font-bold text-pitch">
+              <span className="text-lg font-bold text-pitch dark:text-pitch-light">
                 {r.total_points}
               </span>
               <span className="ml-0.5 text-[11px] text-slate-400">pts</span>

@@ -28,7 +28,13 @@ export default function TablaPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  if (loading) return <p className="text-slate-400">Cargando tabla…</p>;
+  if (loading)
+    return (
+      <div className="space-y-4">
+        <div className="skeleton h-7 w-40" />
+        <div className="skeleton h-64 w-full" />
+      </div>
+    );
 
   return (
     <div className="space-y-4">
