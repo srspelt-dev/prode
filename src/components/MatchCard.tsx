@@ -37,6 +37,12 @@ interface OtherPrediction {
   points_earned: number | null;
 }
 
+interface LeagueGroup {
+  league_id: string;
+  league_name: string;
+  predictions: OtherPrediction[];
+}
+
 function fmtTime(iso: string): string {
   return new Intl.DateTimeFormat("es-AR", {
     weekday: "short",
@@ -101,7 +107,7 @@ export default function MatchCard({ match }: { match: MatchVM }) {
 
   // Modo espectador
   const [showOthers, setShowOthers] = useState(false);
-  const [others, setOthers] = useState<OtherPrediction[] | null>(null);
+  const [groups, setGroups] = useState<LeagueGroup[] | null>(null);
   const [hasLeague, setHasLeague] = useState(true);
   const [loadingOthers, setLoadingOthers] = useState(false);
 
@@ -134,17 +140,17 @@ export default function MatchCard({ match }: { match: MatchVM }) {
   async function toggleOthers() {
     const next = !showOthers;
     setShowOthers(next);
-    if (next && others === null) {
+    if (next && groups === null) {
       setLoadingOthers(true);
       try {
         const d = await apiGet<{
-          predictions: OtherPrediction[];
+          groups: LeagueGroup[];
           has_league: boolean;
         }>(`/predictions/${match.id}`);
-        setOthers(d.predictions);
+        setGroups(d.groups);
         setHasLeague(d.has_league);
       } catch {
-        setOthers([]);
+        setGroups([]);
       } finally {
         setLoadingOthers(false);
       }
@@ -256,30 +262,11 @@ export default function MatchCard({ match }: { match: MatchVM }) {
                 : "👀 Ver pronósticos de mi grupo"}
             </button>
             {showOthers && (
-              <div className="mt-2 text-left">
+              <div className="mt-2 space-y-3 text-left">
                 {loadingOthers ? (
                   <p className="text-center text-xs text-slate-400">
                     Cargando…
                   </p>
-                ) : others && others.length > 0 ? (
-                  <div className="divide-y divide-slate-100">
-                    {others.map((o, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between py-1.5 text-sm"
-                      >
-                        <span className="text-slate-600">{o.username}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-medium">
-                            {o.home_score}-{o.away_score}
-                          </span>
-                          {match.status === "finished" && (
-                            <ScoreBadge points={o.points_earned} />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 ) : !hasLeague ? (
                   <p className="text-center text-xs text-slate-400">
                     Unite a una liga para ver los pronósticos de tu grupo.{" "}
@@ -288,9 +275,39 @@ export default function MatchCard({ match }: { match: MatchVM }) {
                     </a>
                   </p>
                 ) : (
-                  <p className="text-center text-xs text-slate-400">
-                    Nadie de tu grupo pronosticó este partido.
-                  </p>
+                  groups?.map((g) => (
+                    <div key={g.league_id}>
+                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        {g.league_name}
+                      </div>
+                      {g.predictions.length > 0 ? (
+                        <div className="divide-y divide-slate-100">
+                          {g.predictions.map((o, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center justify-between py-1.5 text-sm"
+                            >
+                              <span className="text-slate-600">
+                                {o.username}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-medium">
+                                  {o.home_score}-{o.away_score}
+                                </span>
+                                {match.status === "finished" && (
+                                  <ScoreBadge points={o.points_earned} />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400">
+                          Nadie de esta liga pronosticó.
+                        </p>
+                      )}
+                    </div>
+                  ))
                 )}
               </div>
             )}

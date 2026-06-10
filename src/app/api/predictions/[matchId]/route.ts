@@ -6,9 +6,9 @@ import { LeagueDoc, MatchDoc, PredictionDoc, UserDoc } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/predictions/:matchId  → pronósticos para un partido, pero SOLO de
-// tus "pares": los miembros de tus ligas de la competición de ese partido.
-// Visible únicamente tras cerrar el deadline (modo espectador).
+// GET /api/predictions/:matchId  → pronósticos del partido, SEPARADOS por cada
+// liga del usuario (de la competición de ese partido). Modo espectador.
+// Visible solo tras cerrar el deadline.
 export async function GET(
   req: NextRequest,
   { params }: { params: { matchId: string } }
@@ -40,42 +40,58 @@ export async function GET(
   const userOid = new ObjectId(user.id);
   const competition = match.competition ?? "mundial";
 
-  // Ligas del usuario en la MISMA competición que el partido
+  // Ligas del usuario en la misma competición que el partido
   const leagues = await db
     .collection<LeagueDoc>("leagues")
     .find({ members: userOid, competition })
     .toArray();
 
-  // Conjunto de "pares": todos los miembros de esas ligas (+ uno mismo)
-  const peerIds = new Map<string, ObjectId>();
-  peerIds.set(user.id, userOid);
-  for (const lg of leagues) {
-    for (const m of lg.members) peerIds.set(m.toString(), m);
+  if (leagues.length === 0) {
+    return NextResponse.json({ groups: [], has_league: false });
   }
-  const peerList = Array.from(peerIds.values());
+
+  // Todos los miembros involucrados (para traer predicciones y nombres de una)
+  const allMemberIds = new Map<string, ObjectId>();
+  for (const lg of leagues) {
+    for (const m of lg.members) allMemberIds.set(m.toString(), m);
+  }
+  const memberList = Array.from(allMemberIds.values());
 
   const preds = await db
     .collection<PredictionDoc>("predictions")
-    .find({ match_id: matchOid, user_id: { $in: peerList } })
+    .find({ match_id: matchOid, user_id: { $in: memberList } })
     .toArray();
+  const predByUser = new Map(preds.map((p) => [p.user_id.toString(), p]));
 
   const users = await db
     .collection<UserDoc>("users")
-    .find({ _id: { $in: preds.map((p) => p.user_id) } })
+    .find({ _id: { $in: memberList } })
     .toArray();
   const nameById = new Map(users.map((u) => [u._id!.toString(), u.username]));
 
-  const data = preds
-    .map((p) => ({
-      username: nameById.get(p.user_id.toString()) ?? "?",
-      home_score: p.home_score,
-      away_score: p.away_score,
-      points_earned: p.points_earned,
-    }))
-    .sort((a, b) => (b.points_earned ?? 0) - (a.points_earned ?? 0));
-
-  return NextResponse.json({
-    predictions: data,
-    has_league: leagues.length > 0,
+  // Una sección por liga, con los pronósticos de sus miembros
+  const groups = leagues.map((lg) => {
+    const predictions = lg.members
+      .map((m) => {
+        const p = predByUser.get(m.toString());
+        if (!p) return null;
+        return {
+          username: nameById.get(m.toString()) ?? "?",
+          home_score: p.home_score,
+          away_score: p.away_score,
+          points_earned: p.points_earned,
+        };
+      })
+      .filter(Boolean)
+      .sort(
+        (a: any, b: any) => (b.points_earned ?? 0) - (a.points_earned ?? 0)
+      );
+    return {
+      league_id: lg._id!.toString(),
+      league_name: lg.name,
+      predictions,
+    };
   });
+
+  return NextResponse.json({ groups, has_league: true });
 }
