@@ -44,7 +44,10 @@ export default function NavBar() {
   return (
     <>
       {/* Barra superior */}
-      <header className="border-b border-slate-200 bg-white">
+      <header
+        className="sticky top-0 z-40 border-b border-slate-200 bg-white"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
         <nav className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <Link
             href="/"

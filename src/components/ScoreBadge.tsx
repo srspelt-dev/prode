@@ -16,7 +16,9 @@ export default function ScoreBadge({ points }: { points: number | null }) {
   }
   const color = COLORS[points] ?? "bg-slate-300 text-slate-700";
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${color}`}>
+    <span
+      className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-bold ${color}`}
+    >
       +{points} pts
     </span>
   );
