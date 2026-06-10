@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { countryFlag, teamInitials } from "@/lib/flags";
+import { toast } from "@/lib/toast";
 import ScoreBadge from "./ScoreBadge";
 
 export interface MatchVM {
@@ -113,12 +115,14 @@ export default function MatchCard({ match }: { match: MatchVM }) {
 
   const deadlinePassed = new Date(match.deadline_at).getTime() <= Date.now();
 
+  const [justSaved, setJustSaved] = useState(false);
+
   async function save() {
     setMsg("");
     const h = parseInt(home, 10);
     const a = parseInt(away, 10);
     if (Number.isNaN(h) || Number.isNaN(a)) {
-      setMsg("Ingresá ambos marcadores");
+      toast("Ingresá ambos marcadores", "error");
       return;
     }
     setSaving(true);
@@ -129,9 +133,11 @@ export default function MatchCard({ match }: { match: MatchVM }) {
         away_score: a,
       });
       setSaved(true);
-      setMsg("¡Pronóstico guardado!");
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 1500);
+      toast(`¡Pronóstico guardado! ${match.home_team} ${h}-${a} ${match.away_team}`);
     } catch (e: any) {
-      setMsg(e.message);
+      toast(e.message, "error");
     } finally {
       setSaving(false);
     }
@@ -166,7 +172,17 @@ export default function MatchCard({ match }: { match: MatchVM }) {
           {match.phase}
           {match.group ? ` · Grupo ${match.group}` : ""}
         </span>
-        <span>{STATUS_LABEL[match.status]}</span>
+        {match.status === "live" ? (
+          <span className="flex items-center gap-1 font-semibold text-red-500">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+            </span>
+            En vivo
+          </span>
+        ) : (
+          <span>{STATUS_LABEL[match.status]}</span>
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-3">
@@ -225,7 +241,13 @@ export default function MatchCard({ match }: { match: MatchVM }) {
               onClick={save}
               disabled={saving}
             >
-              {saving ? "..." : saved ? "Actualizar" : "Guardar"}
+              {saving
+                ? "..."
+                : justSaved
+                  ? "✓ Listo"
+                  : saved
+                    ? "Actualizar"
+                    : "Guardar"}
             </button>
           </div>
         ) : match.my_prediction ? (
@@ -327,17 +349,22 @@ function TeamSide({
   logo: string | null;
   reverse?: boolean;
 }) {
+  const flag = countryFlag(name);
   return (
     <div
       className={`flex flex-1 items-center gap-2 ${
         reverse ? "flex-row-reverse text-right" : ""
       }`}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       {logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img src={logo} alt={name} className="h-7 w-7 object-contain" />
+      ) : flag ? (
+        <span className="text-2xl leading-none">{flag}</span>
       ) : (
-        <div className="h-7 w-7 rounded-full bg-slate-100" />
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500">
+          {teamInitials(name)}
+        </span>
       )}
       <span className="text-sm font-medium">{name}</span>
     </div>

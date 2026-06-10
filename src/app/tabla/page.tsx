@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet } from "@/lib/api-client";
 import Leaderboard from "@/components/Leaderboard";
+import JoinLeagueBanner from "@/components/JoinLeagueBanner";
 import type { LeaderboardRow, PublicUser } from "@/lib/types";
 
 export default function TablaPage() {
@@ -32,6 +33,7 @@ export default function TablaPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Tabla global</h1>
+      <JoinLeagueBanner />
       <Leaderboard rows={rows} highlightUserId={me?.id} />
       <p className="text-center text-xs text-slate-400">
         ¿Querés competir solo con tu grupo?{" "}

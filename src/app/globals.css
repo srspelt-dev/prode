@@ -33,3 +33,14 @@ body {
 .score-input {
   @apply w-12 rounded-lg border border-slate-300 text-center text-lg font-bold outline-none focus:border-pitch focus:ring-1 focus:ring-pitch;
 }
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

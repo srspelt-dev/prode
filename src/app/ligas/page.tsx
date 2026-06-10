@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { toast } from "@/lib/toast";
 import { COMPETITIONS, competitionLabel } from "@/lib/types";
 
 interface LeagueVM {
@@ -42,22 +43,23 @@ export default function LigasPage() {
         name: newName,
         competition: newComp,
       });
-      setMsg(`Liga creada. Código: ${league.code}`);
+      toast(`Liga creada · código ${league.code}`);
       setNewName("");
       load();
     } catch (e: any) {
-      setMsg(e.message);
+      toast(e.message, "error");
     }
   }
 
   async function join() {
     setMsg("");
     try {
-      await apiPost("/leagues/join", { code: joinCode });
+      const { league } = await apiPost("/leagues/join", { code: joinCode });
+      toast(`Te uniste a "${league?.name ?? "la liga"}"`);
       setJoinCode("");
       load();
     } catch (e: any) {
-      setMsg(e.message);
+      toast(e.message, "error");
     }
   }
 

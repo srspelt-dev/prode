@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet } from "@/lib/api-client";
 import MatchCard, { MatchVM } from "@/components/MatchCard";
+import JoinLeagueBanner from "@/components/JoinLeagueBanner";
 
 // Clave de día en zona horaria local (YYYY-MM-DD)
 function dayKey(d: Date | string): string {
@@ -90,6 +91,8 @@ export default function PartidosPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Partidos</h1>
+
+      <JoinLeagueBanner />
 
       {/* Navegador de fecha */}
       <div className="card flex items-center justify-between p-3">

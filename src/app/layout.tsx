@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import Toaster from "@/components/Toaster";
 
 export const metadata: Metadata = {
   title: "Prode Mundial 2026",
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <ServiceWorkerRegister />
+        <Toaster />
         <NavBar />
         {/* pb extra en mobile para no quedar tapado por la barra inferior */}
         <main className="mx-auto max-w-3xl px-4 py-6 pb-24 sm:pb-6">
