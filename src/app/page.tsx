@@ -13,10 +13,22 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Si ya está logueado, ir a partidos
+  // Destino tras autenticarse: si hay invitación pendiente, ir a unirse.
+  function nextDestination(): string {
+    if (typeof window !== "undefined") {
+      const code = localStorage.getItem("pending_join");
+      if (code) {
+        localStorage.removeItem("pending_join");
+        return `/unirse/${code}`;
+      }
+    }
+    return "/partidos";
+  }
+
+  // Si ya está logueado, seguir (a la invitación pendiente o a partidos)
   useEffect(() => {
     apiGet("/auth/me")
-      .then(() => router.replace("/partidos"))
+      .then(() => router.replace(nextDestination()))
       .catch(() => {});
   }, [router]);
 
@@ -30,7 +42,7 @@ export default function HomePage() {
       } else {
         await apiPost("/auth/login", { email, password });
       }
-      router.push("/partidos");
+      router.push(nextDestination());
       router.refresh();
     } catch (err: any) {
       setError(err.message);

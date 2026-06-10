@@ -76,13 +76,13 @@ function ShareLeague({ name, code }: { name: string; code: string }) {
   function buildMessage(): string {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
+    const joinUrl = `${origin}/unirse/${code}`;
     return (
-      `⚽ ¡Te invito al Prode Mundial 2026!\n\n` +
-      `Sumate a mi liga "${name}".\n` +
-      `1) Entrá a ${origin}\n` +
-      `2) Creá tu cuenta\n` +
-      `3) En "Ligas" → "Unirse con código" poné: ${code}\n\n` +
-      `¡A ver quién la pega más! 🏆`
+      `⚽ ¡Te invito al Prode!\n\n` +
+      `Sumate a mi liga "${name}" con este link (te une directo):\n` +
+      `${joinUrl}\n\n` +
+      `Si te pide, creá tu cuenta y listo. ¡A ver quién la pega más! 🏆\n` +
+      `(Código por las dudas: ${code})`
     );
   }
 

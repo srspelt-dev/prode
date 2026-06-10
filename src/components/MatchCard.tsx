@@ -102,6 +102,7 @@ export default function MatchCard({ match }: { match: MatchVM }) {
   // Modo espectador
   const [showOthers, setShowOthers] = useState(false);
   const [others, setOthers] = useState<OtherPrediction[] | null>(null);
+  const [hasLeague, setHasLeague] = useState(true);
   const [loadingOthers, setLoadingOthers] = useState(false);
 
   const deadlinePassed = new Date(match.deadline_at).getTime() <= Date.now();
@@ -136,10 +137,12 @@ export default function MatchCard({ match }: { match: MatchVM }) {
     if (next && others === null) {
       setLoadingOthers(true);
       try {
-        const d = await apiGet<{ predictions: OtherPrediction[] }>(
-          `/predictions/${match.id}`
-        );
+        const d = await apiGet<{
+          predictions: OtherPrediction[];
+          has_league: boolean;
+        }>(`/predictions/${match.id}`);
         setOthers(d.predictions);
+        setHasLeague(d.has_league);
       } catch {
         setOthers([]);
       } finally {
@@ -250,7 +253,7 @@ export default function MatchCard({ match }: { match: MatchVM }) {
             >
               {showOthers
                 ? "Ocultar pronósticos"
-                : "👀 Ver pronósticos de todos"}
+                : "👀 Ver pronósticos de mi grupo"}
             </button>
             {showOthers && (
               <div className="mt-2 text-left">
@@ -277,9 +280,16 @@ export default function MatchCard({ match }: { match: MatchVM }) {
                       </div>
                     ))}
                   </div>
+                ) : !hasLeague ? (
+                  <p className="text-center text-xs text-slate-400">
+                    Unite a una liga para ver los pronósticos de tu grupo.{" "}
+                    <a href="/ligas" className="text-pitch underline">
+                      Ir a Ligas
+                    </a>
+                  </p>
                 ) : (
                   <p className="text-center text-xs text-slate-400">
-                    Nadie pronosticó este partido.
+                    Nadie de tu grupo pronosticó este partido.
                   </p>
                 )}
               </div>
