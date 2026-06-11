@@ -55,8 +55,11 @@ function parseMatch(m: FdMatch): MatchDoc {
     kickoff_at: kickoff,
     deadline_at: deadline,
     status,
+    // Guardamos el marcador tanto en vivo como al finalizar (para mostrarlo).
     result:
-      status === "finished"
+      (status === "finished" || status === "live") &&
+      homeScore != null &&
+      awayScore != null
         ? {
             home_score: homeScore,
             away_score: awayScore,

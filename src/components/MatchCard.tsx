@@ -205,8 +205,10 @@ export default function MatchCard({
         <TeamSide name={match.home_team} logo={match.home_logo} />
 
         <div className="shrink-0 text-center">
-          {match.status === "finished" && r ? (
-            <div className="text-2xl font-bold">
+          {(match.status === "finished" || match.status === "live") && r ? (
+            <div
+              className={`text-2xl font-bold ${match.status === "live" ? "text-red-500" : ""}`}
+            >
               {r.home_score} - {r.away_score}
               {r.went_to_penalties && (
                 <div className="text-[10px] font-normal text-slate-400">
