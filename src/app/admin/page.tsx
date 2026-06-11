@@ -144,21 +144,98 @@ export default function AdminPage() {
       </section>
 
       {/* Cargar resultados */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Cargar resultados
-        </h2>
-        {loading ? (
-          <p className="text-slate-400">Cargando…</p>
-        ) : (
-          <div className="space-y-2">
-            {matches.map((m) => (
-              <AdminMatchRow key={m.id} match={m} onSaved={load} />
-            ))}
-          </div>
-        )}
-      </section>
+      <ResultsSection matches={matches} loading={loading} onSaved={load} />
     </div>
+  );
+}
+
+// Categoriza un partido: 0 = falta resultado, 1 = por jugarse, 2 = ya cargado
+function matchCategory(m: MatchVM): 0 | 1 | 2 {
+  if (m.status === "finished") return 2;
+  if (new Date(m.kickoff_at).getTime() < Date.now()) return 0; // ya se jugó, sin resultado
+  return 1;
+}
+
+function ResultsSection({
+  matches,
+  loading,
+  onSaved,
+}: {
+  matches: MatchVM[];
+  loading: boolean;
+  onSaved: () => void;
+}) {
+  const [filter, setFilter] = useState<"pendientes" | "amistosos" | "todos">(
+    "pendientes"
+  );
+
+  const pendingCount = matches.filter((m) => matchCategory(m) === 0).length;
+
+  // Orden general: pendientes → próximos → cargados; dentro, lógica por categoría
+  function ordered(list: MatchVM[]): MatchVM[] {
+    return [...list].sort((a, b) => {
+      const ca = matchCategory(a);
+      const cb = matchCategory(b);
+      if (ca !== cb) return ca - cb;
+      const ka = new Date(a.kickoff_at).getTime();
+      const kb = new Date(b.kickoff_at).getTime();
+      // pendientes: más viejo primero (lo que más urge); resto: según corresponda
+      if (ca === 0) return ka - kb;
+      if (ca === 1) return ka - kb; // próximos: el más cercano primero
+      return kb - ka; // cargados: el más reciente primero
+    });
+  }
+
+  let list: MatchVM[];
+  if (filter === "pendientes") list = matches.filter((m) => matchCategory(m) === 0);
+  else if (filter === "amistosos") list = matches.filter((m) => m.is_manual);
+  else list = matches;
+  list = ordered(list);
+
+  const TABS: { k: typeof filter; label: string }[] = [
+    { k: "pendientes", label: `Pendientes${pendingCount ? ` (${pendingCount})` : ""}` },
+    { k: "amistosos", label: "Amistosos" },
+    { k: "todos", label: "Todos" },
+  ];
+
+  return (
+    <section className="space-y-2">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+        Cargar resultados
+      </h2>
+
+      <div className="flex rounded-lg bg-slate-100 p-1 text-xs dark:bg-slate-800">
+        {TABS.map((t) => (
+          <button
+            key={t.k}
+            onClick={() => setFilter(t.k)}
+            className={`flex-1 rounded-md py-1.5 font-medium ${
+              filter === t.k
+                ? "bg-white shadow-sm dark:bg-slate-700"
+                : "text-slate-500"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <p className="text-slate-400">Cargando…</p>
+      ) : list.length === 0 ? (
+        <div className="card p-6 text-center text-sm text-slate-400">
+          {filter === "pendientes"
+            ? "No hay resultados pendientes 🎉"
+            : "No hay partidos."}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {list.map((m) => (
+            <AdminMatchRow key={m.id} match={m} onSaved={onSaved} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -203,17 +280,32 @@ function AdminMatchRow({
     onSaved();
   }
 
+  const started = new Date(match.kickoff_at).getTime() < Date.now();
+  const needsResult = match.status !== "finished" && started;
+  const overdue =
+    needsResult &&
+    Date.now() - new Date(match.kickoff_at).getTime() > 6 * 3600 * 1000;
+
   return (
-    <div className="card flex flex-wrap items-center gap-2 p-3 text-sm">
+    <div
+      className={`card flex flex-wrap items-center gap-2 p-3 text-sm ${
+        needsResult ? "ring-1 ring-amber-300 dark:ring-amber-700/60" : ""
+      }`}
+    >
       <div className="min-w-[180px] flex-1 font-medium">
         {match.home_team} vs {match.away_team}
         {match.competition && (
-          <span className="ml-2 rounded bg-slate-100 px-1 text-[10px] text-slate-500">
+          <span className="ml-2 rounded bg-slate-100 px-1 text-[10px] text-slate-500 dark:bg-slate-800">
             {competitionLabel(match.competition)}
           </span>
         )}
         {match.status === "finished" && (
           <span className="ml-2 text-xs text-emerald-600">✓ cargado</span>
+        )}
+        {needsResult && (
+          <span className="ml-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
+            {overdue ? "⚠ falta resultado" : "⏳ falta resultado"}
+          </span>
         )}
       </div>
       <input

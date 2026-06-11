@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Award } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { toast } from "@/lib/toast";
 
@@ -43,7 +44,7 @@ export default function EspecialesPage() {
     setSaving(true);
     try {
       await apiPost("/special", { answers });
-      toast("¡Pronósticos especiales guardados! ⭐");
+      toast("Pronósticos especiales guardados");
     } catch (e: any) {
       toast(e.message, "error");
     } finally {
@@ -71,8 +72,9 @@ export default function EspecialesPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="font-display text-xl font-bold">
-          ⭐ Pronósticos especiales
+        <h1 className="flex items-center gap-2 font-display text-xl font-bold">
+          <Award size={22} className="text-pitch" />
+          Pronósticos especiales
         </h1>
         <p className="text-sm text-slate-400">
           Picks de bonus para todo el torneo.

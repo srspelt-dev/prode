@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Award } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import MatchCard, { MatchVM } from "@/components/MatchCard";
 import JoinLeagueBanner from "@/components/JoinLeagueBanner";
@@ -199,8 +200,9 @@ export default function PartidosPage() {
         href="/especiales"
         className="card flex items-center justify-between p-3 text-sm transition hover:shadow-md"
       >
-        <span className="font-medium">
-          ⭐ Pronósticos especiales{" "}
+        <span className="flex items-center gap-2 font-medium">
+          <Award size={16} className="text-pitch" />
+          Pronósticos especiales{" "}
           <span className="text-slate-400">(campeón, goleador…)</span>
         </span>
         <span className="text-pitch">→</span>
