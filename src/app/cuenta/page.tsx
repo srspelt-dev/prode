@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Target, Check, Crosshair, Flame, type LucideIcon } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import ScoreBadge from "@/components/ScoreBadge";
 import Avatar from "@/components/Avatar";
@@ -66,10 +67,14 @@ export default function CuentaPage() {
 
       {/* Estadísticas */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Precisión" value={`${stats.precision}%`} icon="🎯" />
-        <Stat label="Aciertos" value={`${stats.aciertos}/${stats.finished}`} icon="✅" />
-        <Stat label="Exactos" value={stats.exactos} icon="🎰" />
-        <Stat label="Racha" value={stats.racha} icon="🔥" />
+        <Stat label="Precisión" value={`${stats.precision}%`} icon={Target} />
+        <Stat
+          label="Aciertos"
+          value={`${stats.aciertos}/${stats.finished}`}
+          icon={Check}
+        />
+        <Stat label="Exactos" value={stats.exactos} icon={Crosshair} />
+        <Stat label="Racha" value={stats.racha} icon={Flame} />
       </div>
 
       <ChangePassword />
@@ -143,15 +148,15 @@ function computeStats(preds: PredVM[]) {
 function Stat({
   label,
   value,
-  icon,
+  icon: Icon,
 }: {
   label: string;
   value: string | number;
-  icon: string;
+  icon: LucideIcon;
 }) {
   return (
     <div className="card p-3 text-center">
-      <div className="text-xl">{icon}</div>
+      <Icon size={20} className="mx-auto text-pitch" />
       <div className="mt-1 text-xl font-bold">{value}</div>
       <div className="text-[11px] uppercase tracking-wide text-slate-400">
         {label}
@@ -178,7 +183,7 @@ function ChangePassword() {
         current_password: current,
         new_password: next,
       });
-      setMsg("Contraseña actualizada ✅");
+      setMsg("Contraseña actualizada");
       setCurrent("");
       setNext("");
     } catch (e: any) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Clock, AlertTriangle, Trash2, KeyRound } from "lucide-react";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
 import type { MatchVM } from "@/components/MatchCard";
 import { COMPETITIONS, competitionLabel, type PublicUser } from "@/lib/types";
@@ -225,7 +226,7 @@ function ResultsSection({
       ) : list.length === 0 ? (
         <div className="card p-6 text-center text-sm text-slate-400">
           {filter === "pendientes"
-            ? "No hay resultados pendientes 🎉"
+            ? "No hay resultados pendientes."
             : "No hay partidos."}
         </div>
       ) : (
@@ -303,8 +304,15 @@ function AdminMatchRow({
           <span className="ml-2 text-xs text-emerald-600">✓ cargado</span>
         )}
         {needsResult && (
-          <span className="ml-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
-            {overdue ? "⚠ falta resultado" : "⏳ falta resultado"}
+          <span
+            className={`ml-2 inline-flex items-center gap-1 text-xs font-semibold ${
+              overdue
+                ? "text-red-500"
+                : "text-amber-600 dark:text-amber-400"
+            }`}
+          >
+            {overdue ? <AlertTriangle size={12} /> : <Clock size={12} />}
+            falta resultado
           </span>
         )}
       </div>
@@ -340,11 +348,11 @@ function AdminMatchRow({
       </button>
       {match.is_manual && (
         <button
-          className="px-2 text-xs text-red-400 hover:text-red-600"
+          className="px-2 text-red-400 hover:text-red-600"
           onClick={remove}
           title="Borrar partido manual"
         >
-          🗑
+          <Trash2 size={16} />
         </button>
       )}
     </div>
@@ -566,10 +574,16 @@ function ResetPassword({
     <button
       onClick={reset}
       disabled={busy}
-      className="text-xs text-slate-400 hover:text-pitch"
+      className="text-slate-400 hover:text-pitch"
       title="Resetear contraseña"
     >
-      {busy ? "..." : done ? "✓" : "🔑"}
+      {busy ? (
+        <span className="text-xs">...</span>
+      ) : done ? (
+        <span className="text-xs text-emerald-600">✓</span>
+      ) : (
+        <KeyRound size={15} />
+      )}
     </button>
   );
 }

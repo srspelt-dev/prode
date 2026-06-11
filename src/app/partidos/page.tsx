@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Award } from "lucide-react";
+import { Award, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import MatchCard, { MatchVM } from "@/components/MatchCard";
 import JoinLeagueBanner from "@/components/JoinLeagueBanner";
@@ -51,7 +51,7 @@ export default function PartidosPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  // 🎊 Confetti al detectar un resultado exacto (6 pts) recién acertado
+  // Confetti al detectar un resultado exacto (6 pts) recién acertado
   useEffect(() => {
     if (!matches.length) return;
     const exact = matches.filter(
@@ -161,10 +161,10 @@ export default function PartidosPage() {
 
   const headline =
     pendingToday.length > 0
-      ? `Te faltan ${pendingToday.length} pronóstico${pendingToday.length > 1 ? "s" : ""} de hoy 📝`
+      ? `Te faltan ${pendingToday.length} pronóstico${pendingToday.length > 1 ? "s" : ""} de hoy`
       : hasToday
-        ? "¡Listo con los de hoy! ✅"
-        : "No hay partidos hoy ⚽";
+        ? "Estás al día con los de hoy"
+        : "No hay partidos hoy";
 
   // Si hay pendientes hoy, el botón lleva a hoy; si no, al próximo partido
   const target =
@@ -213,11 +213,11 @@ export default function PartidosPage() {
       {/* Navegador de fecha */}
       <div className="card flex items-center justify-between p-3">
         <button
-          className="btn-ghost px-3 py-1.5 text-sm"
+          className="btn-ghost px-3 py-2"
           onClick={() => setSelected(addDays(selected, -1))}
           aria-label="Día anterior"
         >
-          ◀
+          <ChevronLeft size={18} />
         </button>
         <div className="text-center">
           <div className="font-semibold">{labelDay(selected)}</div>
@@ -229,11 +229,11 @@ export default function PartidosPage() {
           </div>
         </div>
         <button
-          className="btn-ghost px-3 py-1.5 text-sm"
+          className="btn-ghost px-3 py-2"
           onClick={() => setSelected(addDays(selected, 1))}
           aria-label="Día siguiente"
         >
-          ▶
+          <ChevronRight size={18} />
         </button>
       </div>
 
@@ -247,7 +247,7 @@ export default function PartidosPage() {
       ) : (
         <div className="card space-y-3 p-6 text-center">
           <p className="text-slate-500">
-            No hay partidos {selKey === todayKey ? "hoy" : "este día"}. ⚽
+            No hay partidos {selKey === todayKey ? "hoy" : "este día"}.
           </p>
           {nextMatchDay && (
             <button

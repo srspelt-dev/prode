@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Users } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 
 // Banner que invita a unirse/crear una liga. Se muestra solo si el usuario
@@ -20,12 +21,12 @@ export default function JoinLeagueBanner() {
   return (
     <div className="rounded-xl border border-pitch/30 bg-pitch/5 p-4">
       <div className="flex items-start gap-3">
-        <span className="text-2xl">🏆</span>
+        <Users size={22} className="mt-0.5 shrink-0 text-pitch" />
         <div className="flex-1">
-          <p className="font-semibold text-slate-800">
+          <p className="font-semibold text-slate-800 dark:text-slate-100">
             Sumate a una liga para competir
           </p>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             Creá tu propia liga o unite con el código de un amigo para ver la
             tabla de tu grupo.
           </p>

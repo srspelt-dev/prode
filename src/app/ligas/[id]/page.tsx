@@ -78,10 +78,10 @@ function ShareLeague({ name, code }: { name: string; code: string }) {
       typeof window !== "undefined" ? window.location.origin : "";
     const joinUrl = `${origin}/unirse/${code}`;
     return (
-      `⚽ ¡Te invito al Prode!\n\n` +
+      `Te invito al Prode Mundial.\n\n` +
       `Sumate a mi liga "${name}" con este link (te une directo):\n` +
       `${joinUrl}\n\n` +
-      `Si te pide, creá tu cuenta y listo. ¡A ver quién la pega más! 🏆\n` +
+      `Si te pide, creá tu cuenta y listo.\n` +
       `(Código por las dudas: ${code})`
     );
   }

@@ -58,7 +58,7 @@ function fmtTime(iso: string): string {
 
 const STATUS_LABEL: Record<string, string> = {
   upcoming: "Por jugarse",
-  live: "🔴 En vivo",
+  live: "En vivo",
   finished: "Finalizado",
 };
 
@@ -296,7 +296,7 @@ export default function MatchCard({
             >
               {showOthers
                 ? "Ocultar pronósticos"
-                : "👀 Ver pronósticos de mi grupo"}
+                : "Ver pronósticos de mi grupo"}
             </button>
             {showOthers && (
               <div className="mt-2 space-y-3 text-left">

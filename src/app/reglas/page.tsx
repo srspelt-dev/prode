@@ -80,21 +80,21 @@ export default function ReglasPage() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
           A tener en cuenta
         </h2>
-        <ul className="space-y-2 text-sm text-slate-600">
+        <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
           <li className="card p-3">
-            ⏰ <strong>Plazo:</strong> podés cargar o editar tu pronóstico hasta{" "}
+            <strong>Plazo:</strong> podés cargar o editar tu pronóstico hasta{" "}
             <strong>5 minutos antes</strong> del inicio del partido. Después se
             bloquea.
           </li>
           <li className="card p-3">
-            🥅 <strong>Penales:</strong> si un partido se define por penales,
-            cuenta el resultado <strong>antes de la tanda</strong> (el del
-            tiempo reglamentario o alargue). Ejemplo: si terminó 1-1 y se definió
-            por penales, para el prode vale 1-1.
+            <strong>Penales:</strong> si un partido se define por penales, cuenta
+            el resultado <strong>antes de la tanda</strong> (el del tiempo
+            reglamentario o alargue). Ejemplo: si terminó 1-1 y se definió por
+            penales, para el prode vale 1-1.
           </li>
           <li className="card p-3">
-            🏆 <strong>Ligas:</strong> tus puntos cuentan tanto en la tabla
-            global como en cada liga privada en la que estés.
+            <strong>Ligas:</strong> tus puntos cuentan tanto en la tabla global
+            como en cada liga privada en la que estés.
           </li>
         </ul>
       </section>

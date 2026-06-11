@@ -1,7 +1,12 @@
 import type { LeaderboardRow } from "@/lib/types";
 import Avatar from "./Avatar";
 
-const MEDAL = ["🥇", "🥈", "🥉"];
+// Colores del podio (1°, 2°, 3°)
+const PODIUM = [
+  "bg-amber-400 text-amber-950",
+  "bg-slate-300 text-slate-700",
+  "bg-orange-400 text-orange-950",
+];
 
 export default function Leaderboard({
   rows,
@@ -13,10 +18,9 @@ export default function Leaderboard({
   if (rows.length === 0) {
     return (
       <div className="card p-8 text-center">
-        <div className="text-3xl">📊</div>
-        <p className="mt-2 text-sm text-slate-400">
-          Todavía no hay puntos. ¡Cuando se jueguen los primeros partidos
-          aparece el ranking!
+        <p className="text-sm text-slate-400">
+          Todavía no hay puntos. Cuando se jueguen los primeros partidos aparece
+          el ranking.
         </p>
       </div>
     );
@@ -37,7 +41,7 @@ export default function Leaderboard({
     <div className="card overflow-hidden">
       {rows.map((r, i) => {
         const isMe = r.user_id === highlightUserId;
-        const medal = MEDAL[i];
+        const podium = PODIUM[i];
         const move = hasLast ? (prevRank.get(r.user_id) ?? i) - i : 0;
         return (
           <div
@@ -46,10 +50,14 @@ export default function Leaderboard({
               isMe ? "bg-pitch/5 dark:bg-pitch/10" : ""
             }`}
           >
-            {/* Posición / medalla */}
+            {/* Posición */}
             <div className="flex w-6 shrink-0 justify-center">
-              {medal ? (
-                <span className="text-xl leading-none">{medal}</span>
+              {podium ? (
+                <span
+                  className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${podium}`}
+                >
+                  {i + 1}
+                </span>
               ) : (
                 <span className="text-sm font-bold text-slate-400">
                   {i + 1}

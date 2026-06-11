@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trophy, CalendarDays, Users, BarChart3 } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 
 export default function HomePage() {
@@ -54,8 +55,10 @@ export default function HomePage() {
   return (
     <div className="mx-auto mt-8 max-w-sm">
       <div className="mb-6 text-center">
-        <div className="text-5xl">🏆</div>
-        <h1 className="mt-2 text-2xl font-bold">Prode Mundial 2026</h1>
+        <Trophy size={44} className="mx-auto text-pitch" strokeWidth={1.5} />
+        <h1 className="mt-2 font-display text-2xl font-bold">
+          Prode Mundial 2026
+        </h1>
         <p className="mt-1 text-sm text-slate-500">
           Pronosticá los partidos y competí con tus amigos
         </p>
@@ -127,15 +130,15 @@ export default function HomePage() {
       {/* Beneficios */}
       <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs text-slate-500">
         <div className="card p-3">
-          <div className="text-xl">⚽</div>
+          <CalendarDays size={20} className="mx-auto text-pitch" />
           <div className="mt-1">Pronosticá cada partido</div>
         </div>
         <div className="card p-3">
-          <div className="text-xl">👥</div>
+          <Users size={20} className="mx-auto text-pitch" />
           <div className="mt-1">Ligas con amigos</div>
         </div>
         <div className="card p-3">
-          <div className="text-xl">🏆</div>
+          <BarChart3 size={20} className="mx-auto text-pitch" />
           <div className="mt-1">Tabla en vivo</div>
         </div>
       </div>

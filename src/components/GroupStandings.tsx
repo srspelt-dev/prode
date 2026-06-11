@@ -47,8 +47,7 @@ export default function GroupStandings() {
   if (groups.length === 0)
     return (
       <div className="card p-8 text-center">
-        <div className="text-3xl">🏟️</div>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="text-sm text-slate-400">
           Todavía no hay partidos jugados. Cuando arranque el Mundial vas a ver
           acá las posiciones reales de cada grupo.
         </p>
