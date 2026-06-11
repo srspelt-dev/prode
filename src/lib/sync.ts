@@ -1,6 +1,6 @@
 import { Db } from "mongodb";
 import { getDb, ensureIndexes } from "./mongodb";
-import { FdMatch, getMatches, getLiveMatches } from "./football-data";
+import { FdMatch, getMatches, getRecentMatches } from "./football-data";
 import { recalcularPuntosPartido } from "./scoring-service";
 import { MatchDoc, MatchPhase, MatchStatus } from "./types";
 
@@ -103,10 +103,11 @@ export async function syncAllFixtures(): Promise<number> {
   return matches.length;
 }
 
-// Sincroniza solo los partidos en vivo (cada 1-2 min durante el torneo).
+// Sincroniza los partidos recientes (en vivo + recién terminados).
+// Se corre cada 1-2 min durante el torneo.
 export async function syncLiveFixtures(): Promise<number> {
   const db = await getDb();
-  const matches = await getLiveMatches();
+  const matches = await getRecentMatches();
   for (const m of matches) {
     await upsertMatch(db, m);
   }

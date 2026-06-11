@@ -172,6 +172,10 @@ export default function MatchCard({
   }
 
   const r = match.result;
+  // Empezó (kickoff pasó) pero aún no tiene resultado cargado
+  const playing =
+    match.status !== "finished" &&
+    new Date(match.kickoff_at).getTime() <= Date.now();
 
   return (
     <div className="card animate-card-in p-4">
@@ -187,6 +191,10 @@ export default function MatchCard({
               <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
             </span>
             En vivo
+          </span>
+        ) : playing ? (
+          <span className="font-semibold text-amber-600 dark:text-amber-400">
+            Jugándose
           </span>
         ) : (
           <span>{STATUS_LABEL[match.status]}</span>

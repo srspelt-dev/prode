@@ -83,6 +83,19 @@ export async function getLiveMatches(): Promise<FdMatch[]> {
   return (data?.matches ?? []) as FdMatch[];
 }
 
+// Partidos recientes (ayer, hoy y mañana) — captura los EN VIVO y los que
+// RECIÉN TERMINARON (que ya no aparecen como LIVE), para cerrar el resultado.
+export async function getRecentMatches(): Promise<FdMatch[]> {
+  const day = 24 * 3600 * 1000;
+  const now = Date.now();
+  const fmt = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+  const data = await get(`competitions/${COMPETITION}/matches`, {
+    dateFrom: fmt(now - day),
+    dateTo: fmt(now + day),
+  });
+  return (data?.matches ?? []) as FdMatch[];
+}
+
 export interface FdStandingRow {
   position: number;
   team: { name: string; crest: string | null };

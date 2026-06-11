@@ -27,17 +27,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ mode, synced: count });
     }
 
-    // mode=live → antes de gastar un request, chequear si hay partidos próximos
+    // mode=live → antes de gastar un request, chequear si hay un partido
+    // relevante: que esté por empezar (próximas 2h) o que haya empezado hace
+    // poco y todavía no esté terminado (en vivo / esperando resultado).
     const { getDb } = await import("@/lib/mongodb");
     const db = await getDb();
-    const now = new Date();
-    const soon = new Date(now.getTime() + 2 * 3600 * 1000);
-    const upcomingSoon = await db.collection("matches").countDocuments({
-      kickoff_at: { $gte: now, $lte: soon },
-      status: { $in: ["upcoming", "live"] },
+    const now = Date.now();
+    const from = new Date(now - 4 * 3600 * 1000); // empezó hasta 4h atrás
+    const to = new Date(now + 2 * 3600 * 1000); // empieza dentro de 2h
+    const relevant = await db.collection("matches").countDocuments({
+      status: { $ne: "finished" },
+      kickoff_at: { $gte: from, $lte: to },
     });
 
-    if (upcomingSoon === 0) {
+    if (relevant === 0) {
       return NextResponse.json({ mode, synced: 0, skipped: true });
     }
 
