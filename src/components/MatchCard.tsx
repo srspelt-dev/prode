@@ -97,7 +97,13 @@ function Countdown({ deadline }: { deadline: string }) {
   );
 }
 
-export default function MatchCard({ match }: { match: MatchVM }) {
+export default function MatchCard({
+  match,
+  onSaved,
+}: {
+  match: MatchVM;
+  onSaved?: (id: string, home: number, away: number) => void;
+}) {
   const [home, setHome] = useState<number | null>(
     match.my_prediction ? match.my_prediction.home_score : null
   );
@@ -132,6 +138,9 @@ export default function MatchCard({ match }: { match: MatchVM }) {
       setSaved(true);
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 1500);
+      // Avisar al padre para que actualice la lista (evita que se "pierda"
+      // el pronóstico al navegar entre días y volver).
+      onSaved?.(match.id, home, away);
       toast(
         `¡Pronóstico guardado! ${match.home_team} ${home}-${away} ${match.away_team}`
       );

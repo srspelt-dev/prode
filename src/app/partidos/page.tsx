@@ -50,6 +50,24 @@ export default function PartidosPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
+  // Al guardar un pronóstico, reflejarlo en la lista (sobrevive al cambiar de día)
+  function handleSaved(id: string, h: number, a: number) {
+    setMatches((prev) =>
+      prev.map((m) =>
+        m.id === id
+          ? {
+              ...m,
+              my_prediction: {
+                home_score: h,
+                away_score: a,
+                points_earned: null,
+              },
+            }
+          : m
+      )
+    );
+  }
+
   // Días que tienen partidos (ordenados)
   const matchDays = useMemo(() => {
     const set = new Set(matches.map((m) => dayKey(m.kickoff_at)));
@@ -134,7 +152,7 @@ export default function PartidosPage() {
       {matchesOfDay.length > 0 ? (
         <div className="space-y-3">
           {matchesOfDay.map((m) => (
-            <MatchCard key={m.id} match={m} />
+            <MatchCard key={m.id} match={m} onSaved={handleSaved} />
           ))}
         </div>
       ) : (
