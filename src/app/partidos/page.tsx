@@ -139,12 +139,15 @@ export default function PartidosPage() {
   }
 
   const nowMs = Date.now();
-  const pendingMatches = matches.filter(
+  // Pendientes SOLO de hoy (día local)
+  const pendingToday = matches.filter(
     (m) =>
       m.status === "upcoming" &&
       new Date(m.deadline_at).getTime() > nowMs &&
-      !m.my_prediction
+      !m.my_prediction &&
+      dayKey(m.kickoff_at) === todayKey
   );
+  const hasToday = matches.some((m) => dayKey(m.kickoff_at) === todayKey);
   const nextMatch = matches
     .filter(
       (m) =>
@@ -155,34 +158,42 @@ export default function PartidosPage() {
         new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime()
     )[0];
 
+  const headline =
+    pendingToday.length > 0
+      ? `Te faltan ${pendingToday.length} pronóstico${pendingToday.length > 1 ? "s" : ""} de hoy 📝`
+      : hasToday
+        ? "¡Listo con los de hoy! ✅"
+        : "No hay partidos hoy ⚽";
+
+  // Si hay pendientes hoy, el botón lleva a hoy; si no, al próximo partido
+  const target =
+    pendingToday.length > 0
+      ? todayKey
+      : nextMatch
+        ? dayKey(nextMatch.kickoff_at)
+        : todayKey;
+
   return (
     <div className="space-y-4">
       <h1 className="font-display text-xl font-bold">Partidos</h1>
 
-      {/* Dashboard: pendientes + próximo partido */}
-      {nextMatch && (
-        <button
-          onClick={() => goToKey(dayKey(nextMatch.kickoff_at))}
-          className="card flex w-full items-center justify-between gap-3 p-4 text-left transition hover:shadow-md"
-        >
-          <div className="min-w-0">
-            {pendingMatches.length > 0 ? (
-              <div className="font-semibold text-pitch dark:text-pitch-light">
-                Te faltan {pendingMatches.length} pronóstico
-                {pendingMatches.length > 1 ? "s" : ""} 📝
-              </div>
-            ) : (
-              <div className="font-semibold text-pitch dark:text-pitch-light">
-                ¡Estás al día! ✅
-              </div>
-            )}
+      {/* Dashboard: pendientes de hoy + próximo partido */}
+      <button
+        onClick={() => goToKey(target)}
+        className="card flex w-full items-center justify-between gap-3 p-4 text-left transition hover:shadow-md"
+      >
+        <div className="min-w-0">
+          <div className="font-semibold text-pitch dark:text-pitch-light">
+            {headline}
+          </div>
+          {nextMatch && (
             <div className="mt-0.5 truncate text-sm text-slate-500 dark:text-slate-400">
               Próximo: {nextMatch.home_team} vs {nextMatch.away_team}
             </div>
-          </div>
-          <span className="shrink-0 text-pitch">→</span>
-        </button>
-      )}
+          )}
+        </div>
+        <span className="shrink-0 text-pitch">→</span>
+      </button>
 
       <a
         href="/especiales"

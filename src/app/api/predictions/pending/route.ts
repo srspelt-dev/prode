@@ -16,10 +16,22 @@ export async function GET(req: NextRequest) {
   const db = await getDb();
   const now = new Date();
 
+  // Rango opcional (día local del usuario): ?from=ISO&to=ISO
+  const from = req.nextUrl.searchParams.get("from");
+  const to = req.nextUrl.searchParams.get("to");
+
+  const matchFilter: Record<string, unknown> = {
+    status: "upcoming",
+    deadline_at: { $gt: now },
+  };
+  if (from && to) {
+    matchFilter.kickoff_at = { $gte: new Date(from), $lt: new Date(to) };
+  }
+
   // Partidos abiertos (deadline futuro, no terminados)
   const openMatches = await db
     .collection<MatchDoc>("matches")
-    .find({ status: "upcoming", deadline_at: { $gt: now } })
+    .find(matchFilter)
     .project({ _id: 1 })
     .toArray();
   const openIds = openMatches.map((m: any) => m._id.toString());

@@ -56,7 +56,14 @@ export default function NavBar() {
       .then((d) => setUser(d.user))
       .catch(() => setUser(null))
       .finally(() => setLoaded(true));
-    apiGet<{ count: number }>("/predictions/pending")
+    // Solo los partidos de HOY (en la zona horaria del usuario)
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    apiGet<{ count: number }>(
+      `/predictions/pending?from=${start.toISOString()}&to=${end.toISOString()}`
+    )
       .then((d) => setPending(d.count))
       .catch(() => setPending(0));
   }, [pathname]);
