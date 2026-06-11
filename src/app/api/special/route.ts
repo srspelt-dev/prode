@@ -13,8 +13,14 @@ export const dynamic = "force-dynamic";
 
 const COMP = SPECIAL_COMPETITION;
 
-// Deadline: el kickoff del primer partido de la competición.
+// Deadline: si el admin fijó uno en special_config, se usa ese; si no, el
+// kickoff del primer partido de la competición.
 async function getDeadline(db: Db): Promise<Date | null> {
+  const cfg = await db
+    .collection("special_config")
+    .findOne({ competition: COMP });
+  if (cfg?.deadline) return new Date(cfg.deadline);
+
   const first = await db
     .collection<MatchDoc>("matches")
     .find({ competition: COMP })

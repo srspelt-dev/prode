@@ -359,6 +359,65 @@ function AdminMatchRow({
   );
 }
 
+function SpecialDeadline() {
+  const [value, setValue] = useState("");
+  const [current, setCurrent] = useState<string | null>(null);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    apiGet<{ deadline: string | null }>("/special").then((d) => {
+      setCurrent(d.deadline);
+      if (d.deadline) {
+        // ISO → formato datetime-local (hora local)
+        const dt = new Date(d.deadline);
+        const off = dt.getTimezoneOffset() * 60000;
+        setValue(new Date(dt.getTime() - off).toISOString().slice(0, 16));
+      }
+    });
+  }, []);
+
+  async function save() {
+    setMsg("");
+    try {
+      await apiPost("/special/config", {
+        deadline: new Date(value).toISOString(),
+      });
+      setMsg("Plazo actualizado. Los especiales quedaron abiertos hasta esa fecha.");
+    } catch (e: any) {
+      setMsg(e.message);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-medium text-slate-500">
+        Plazo para cargar especiales
+      </label>
+      <div className="flex flex-wrap gap-2">
+        <input
+          type="datetime-local"
+          className="input flex-1"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+        <button className="btn-primary px-3 text-sm" onClick={save}>
+          Fijar plazo
+        </button>
+      </div>
+      {current && (
+        <p className="text-xs text-slate-400">
+          Plazo actual:{" "}
+          {new Intl.DateTimeFormat("es-AR", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }).format(new Date(current))}
+        </p>
+      )}
+      {msg && <p className="text-xs text-pitch">{msg}</p>}
+    </div>
+  );
+}
+
 function SpecialResults() {
   const [open, setOpen] = useState(false);
   const [questions, setQuestions] = useState<
@@ -401,6 +460,8 @@ function SpecialResults() {
       </button>
       {open && (
         <div className="card space-y-3 p-4">
+          <SpecialDeadline />
+          <hr className="border-slate-100 dark:border-slate-800" />
           {questions.map((q) => (
             <div key={q.key}>
               <label className="text-xs text-slate-500">{q.label}</label>
