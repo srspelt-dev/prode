@@ -83,6 +83,9 @@ export default function AdminPage() {
       {/* Crear partido a mano (amistosos, etc.) */}
       <CreateMatch onCreated={load} />
 
+      {/* Resultados de pronósticos especiales */}
+      <SpecialResults />
+
       {/* Usuarios registrados */}
       <section className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
@@ -253,6 +256,87 @@ function AdminMatchRow({
         </button>
       )}
     </div>
+  );
+}
+
+function SpecialResults() {
+  const [open, setOpen] = useState(false);
+  const [questions, setQuestions] = useState<
+    { key: string; label: string; type: string; points: number }[]
+  >([]);
+  const [teams, setTeams] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (!open || questions.length) return;
+    apiGet<{
+      questions: any[];
+      teams: string[];
+      results: Record<string, string> | null;
+    }>("/special").then((d) => {
+      setQuestions(d.questions);
+      setTeams(d.teams);
+      setAnswers(d.results || {});
+    });
+  }, [open, questions.length]);
+
+  async function save() {
+    setMsg("");
+    try {
+      await apiPost("/special/result", { answers });
+      setMsg("Resultados guardados. Se recalculan los puntos especiales.");
+    } catch (e: any) {
+      setMsg(e.message);
+    }
+  }
+
+  return (
+    <section className="space-y-2">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="text-sm font-semibold uppercase tracking-wide text-slate-400 hover:text-slate-600"
+      >
+        Resultados especiales (campeón, goleador…) {open ? "▲" : "▼"}
+      </button>
+      {open && (
+        <div className="card space-y-3 p-4">
+          {questions.map((q) => (
+            <div key={q.key}>
+              <label className="text-xs text-slate-500">{q.label}</label>
+              {q.type === "team" ? (
+                <select
+                  className="input mt-1"
+                  value={answers[q.key] || ""}
+                  onChange={(e) =>
+                    setAnswers((a) => ({ ...a, [q.key]: e.target.value }))
+                  }
+                >
+                  <option value="">—</option>
+                  {teams.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className="input mt-1"
+                  value={answers[q.key] || ""}
+                  onChange={(e) =>
+                    setAnswers((a) => ({ ...a, [q.key]: e.target.value }))
+                  }
+                />
+              )}
+            </div>
+          ))}
+          {msg && <p className="text-sm text-pitch">{msg}</p>}
+          <button className="btn-primary" onClick={save}>
+            Guardar resultados
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
 

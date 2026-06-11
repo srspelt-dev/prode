@@ -22,11 +22,23 @@ export default function Leaderboard({
     );
   }
 
+  // Movimiento: comparar el puesto actual vs el puesto SIN los puntos del
+  // último partido (así se ve quién subió/bajó tras la última fecha).
+  const hasLast = rows.some((r) => r.last_points != null);
+  const prevOrder = [...rows]
+    .map((r) => ({
+      id: r.user_id,
+      prev: r.total_points - (r.last_points ?? 0),
+    }))
+    .sort((a, b) => b.prev - a.prev);
+  const prevRank = new Map(prevOrder.map((r, i) => [r.id, i]));
+
   return (
     <div className="card overflow-hidden">
       {rows.map((r, i) => {
         const isMe = r.user_id === highlightUserId;
         const medal = MEDAL[i];
+        const move = hasLast ? (prevRank.get(r.user_id) ?? i) - i : 0;
         return (
           <div
             key={r.user_id}
@@ -43,6 +55,19 @@ export default function Leaderboard({
                   {i + 1}
                 </span>
               )}
+            </div>
+
+            {/* Flecha de movimiento */}
+            <div className="w-3 shrink-0 text-center text-xs leading-none">
+              {move > 0 ? (
+                <span className="text-emerald-500" title={`Subió ${move}`}>
+                  ▲
+                </span>
+              ) : move < 0 ? (
+                <span className="text-red-500" title={`Bajó ${-move}`}>
+                  ▼
+                </span>
+              ) : null}
             </div>
 
             <Avatar name={r.username} size={34} />

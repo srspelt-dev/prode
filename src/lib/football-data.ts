@@ -82,3 +82,41 @@ export async function getLiveMatches(): Promise<FdMatch[]> {
   });
   return (data?.matches ?? []) as FdMatch[];
 }
+
+export interface FdStandingRow {
+  position: number;
+  team: { name: string; crest: string | null };
+  playedGames: number;
+  won: number;
+  draw: number;
+  lost: number;
+  points: number;
+  goalDifference: number;
+}
+
+export interface FdStandingGroup {
+  group: string | null;
+  table: FdStandingRow[];
+}
+
+// Tabla de posiciones (grupos del Mundial).
+export async function getStandings(): Promise<FdStandingGroup[]> {
+  const data = await get(`competitions/${COMPETITION}/standings`, {});
+  const standings = (data?.standings ?? []) as any[];
+  // Quedarnos con el tipo TOTAL de cada grupo
+  return standings
+    .filter((s) => s.type === "TOTAL")
+    .map((s) => ({
+      group: s.group,
+      table: (s.table ?? []).map((t: any) => ({
+        position: t.position,
+        team: { name: t.team?.name ?? "?", crest: t.team?.crest ?? null },
+        playedGames: t.playedGames,
+        won: t.won,
+        draw: t.draw,
+        lost: t.lost,
+        points: t.points,
+        goalDifference: t.goalDifference,
+      })),
+    }));
+}

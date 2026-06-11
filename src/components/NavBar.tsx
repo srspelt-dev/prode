@@ -46,6 +46,7 @@ function useDarkMode() {
 export default function NavBar() {
   const [user, setUser] = useState<PublicUser | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [pending, setPending] = useState(0);
   const pathname = usePathname();
   const router = useRouter();
   const { dark, toggle } = useDarkMode();
@@ -55,6 +56,9 @@ export default function NavBar() {
       .then((d) => setUser(d.user))
       .catch(() => setUser(null))
       .finally(() => setLoaded(true));
+    apiGet<{ count: number }>("/predictions/pending")
+      .then((d) => setPending(d.count))
+      .catch(() => setPending(0));
   }, [pathname]);
 
   async function logout() {
@@ -114,6 +118,11 @@ export default function NavBar() {
                     }`}
                   >
                     {l.label}
+                    {l.href === "/partidos" && pending > 0 && (
+                      <span className="ml-1 rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                        {pending}
+                      </span>
+                    )}
                   </Link>
                 ))}
               </div>
@@ -155,7 +164,14 @@ export default function NavBar() {
                       : "text-slate-500 dark:text-slate-400"
                   }`}
                 >
-                  <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+                  <span className="relative">
+                    <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+                    {l.href === "/partidos" && pending > 0 && (
+                      <span className="absolute -right-2.5 -top-1.5 min-w-[16px] rounded-full bg-red-500 px-1 text-center text-[9px] font-bold leading-4 text-white">
+                        {pending}
+                      </span>
+                    )}
+                  </span>
                   <span className="font-medium">{l.label}</span>
                 </Link>
               );

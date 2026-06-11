@@ -47,5 +47,8 @@ export async function ensureIndexes(): Promise<void> {
     db.collection("matches").createIndex({ kickoff_at: 1 }),
     db.collection("matches").createIndex({ external_id: 1 }, { unique: true }),
     db.collection("leagues").createIndex({ code: 1 }, { unique: true }),
+    db
+      .collection("special_predictions")
+      .createIndex({ user_id: 1, competition: 1 }, { unique: true }),
   ]);
 }

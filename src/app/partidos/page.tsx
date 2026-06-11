@@ -50,6 +50,29 @@ export default function PartidosPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
+  // 🎊 Confetti al detectar un resultado exacto (6 pts) recién acertado
+  useEffect(() => {
+    if (!matches.length) return;
+    const exact = matches.filter(
+      (m) => m.status === "finished" && m.my_prediction?.points_earned === 6
+    );
+    if (!exact.length) return;
+    let celebrated: string[] = [];
+    try {
+      celebrated = JSON.parse(localStorage.getItem("celebrated") || "[]");
+    } catch {}
+    const fresh = exact.filter((m) => !celebrated.includes(m.id));
+    if (fresh.length) {
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({ particleCount: 140, spread: 75, origin: { y: 0.6 } });
+      });
+      localStorage.setItem(
+        "celebrated",
+        JSON.stringify([...celebrated, ...fresh.map((m) => m.id)])
+      );
+    }
+  }, [matches]);
+
   // Al guardar un pronóstico, reflejarlo en la lista (sobrevive al cambiar de día)
   function handleSaved(id: string, h: number, a: number) {
     setMatches((prev) =>
@@ -115,9 +138,62 @@ export default function PartidosPage() {
     );
   }
 
+  const nowMs = Date.now();
+  const pendingMatches = matches.filter(
+    (m) =>
+      m.status === "upcoming" &&
+      new Date(m.deadline_at).getTime() > nowMs &&
+      !m.my_prediction
+  );
+  const nextMatch = matches
+    .filter(
+      (m) =>
+        m.status === "upcoming" && new Date(m.kickoff_at).getTime() > nowMs
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime()
+    )[0];
+
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Partidos</h1>
+      <h1 className="font-display text-xl font-bold">Partidos</h1>
+
+      {/* Dashboard: pendientes + próximo partido */}
+      {nextMatch && (
+        <button
+          onClick={() => goToKey(dayKey(nextMatch.kickoff_at))}
+          className="card flex w-full items-center justify-between gap-3 p-4 text-left transition hover:shadow-md"
+        >
+          <div className="min-w-0">
+            {pendingMatches.length > 0 ? (
+              <div className="font-semibold text-pitch dark:text-pitch-light">
+                Te faltan {pendingMatches.length} pronóstico
+                {pendingMatches.length > 1 ? "s" : ""} 📝
+              </div>
+            ) : (
+              <div className="font-semibold text-pitch dark:text-pitch-light">
+                ¡Estás al día! ✅
+              </div>
+            )}
+            <div className="mt-0.5 truncate text-sm text-slate-500 dark:text-slate-400">
+              Próximo: {nextMatch.home_team} vs {nextMatch.away_team}
+            </div>
+          </div>
+          <span className="shrink-0 text-pitch">→</span>
+        </button>
+      )}
+
+      <a
+        href="/especiales"
+        className="card flex items-center justify-between p-3 text-sm transition hover:shadow-md"
+      >
+        <span className="font-medium">
+          ⭐ Pronósticos especiales{" "}
+          <span className="text-slate-400">(campeón, goleador…)</span>
+        </span>
+        <span className="text-pitch">→</span>
+      </a>
 
       <JoinLeagueBanner />
 

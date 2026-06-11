@@ -1,5 +1,6 @@
 import { Db, ObjectId } from "mongodb";
 import { LeaderboardRow, UserDoc } from "./types";
+import { computeSpecialPoints } from "./special";
 
 interface LeaderboardOpts {
   userIds?: ObjectId[]; // restringir a estos usuarios (tabla de una liga)
@@ -83,6 +84,10 @@ export async function computeLeaderboard(
     last_points: lastMatchId ? r.last_points : null,
   }));
 
+  // Puntos especiales (bonus por campeón, goleador, etc.)
+  const special = await computeSpecialPoints(db, { userIds, competition });
+  const bonus = (id: string) => special.get(id) ?? 0;
+
   // Para una liga: incluir a todos los miembros, aun con 0 puntos.
   if (userIds) {
     const scoredById = new Map(scored.map((r) => [r.user_id, r]));
@@ -93,15 +98,14 @@ export async function computeLeaderboard(
 
     const all: LeaderboardRow[] = members.map((u) => {
       const id = u._id!.toString();
-      return (
-        scoredById.get(id) ?? {
-          user_id: id,
-          username: u.username,
-          total_points: 0,
-          predictions_count: 0,
-          last_points: lastMatchId ? 0 : null,
-        }
-      );
+      const base = scoredById.get(id);
+      return {
+        user_id: id,
+        username: u.username,
+        total_points: (base?.total_points ?? 0) + bonus(id),
+        predictions_count: base?.predictions_count ?? 0,
+        last_points: lastMatchId ? (base?.last_points ?? 0) : null,
+      };
     });
 
     all.sort(
@@ -113,5 +117,34 @@ export async function computeLeaderboard(
     return all;
   }
 
-  return scored;
+  // Global: sumar bonus y agregar usuarios que solo tengan puntos especiales
+  const byId = new Map(scored.map((r) => [r.user_id, r]));
+  for (const [id, pts] of special) {
+    const row = byId.get(id);
+    if (row) row.total_points += pts;
+    else byId.set(id, {
+      user_id: id,
+      username: "",
+      total_points: pts,
+      predictions_count: 0,
+      last_points: lastMatchId ? 0 : null,
+    });
+  }
+
+  // Completar nombres faltantes (usuarios solo-especiales)
+  const missing = [...byId.values()].filter((r) => !r.username);
+  if (missing.length) {
+    const users = await db
+      .collection<UserDoc>("users")
+      .find({ _id: { $in: missing.map((r) => new ObjectId(r.user_id)) } })
+      .toArray();
+    const nameById = new Map(users.map((u) => [u._id!.toString(), u.username]));
+    for (const r of missing) r.username = nameById.get(r.user_id) ?? "?";
+  }
+
+  return [...byId.values()].sort(
+    (a, b) =>
+      b.total_points - a.total_points ||
+      b.predictions_count - a.predictions_count
+  );
 }
