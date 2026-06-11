@@ -1,6 +1,11 @@
 import { Db } from "mongodb";
 import { getDb, ensureIndexes } from "./mongodb";
-import { FdMatch, getMatches, getRecentMatches } from "./football-data";
+import {
+  FdMatch,
+  getMatches,
+  getRecentMatches,
+  getLiveMatches,
+} from "./football-data";
 import { recalcularPuntosPartido } from "./scoring-service";
 import { MatchDoc, MatchPhase, MatchStatus } from "./types";
 
@@ -70,11 +75,25 @@ function parseMatch(m: FdMatch): MatchDoc {
   };
 }
 
+const STATUS_RANK: Record<MatchStatus, number> = {
+  upcoming: 0,
+  live: 1,
+  finished: 2,
+};
+
 async function upsertMatch(db: Db, m: FdMatch): Promise<void> {
   const doc = parseMatch(m);
   const prev = await db
     .collection<MatchDoc>("matches")
     .findOne({ external_id: doc.external_id });
+
+  // Estado monótono: nunca retroceder (la API a veces devuelve datos viejos).
+  // Si lo que llega es "menos avanzado" que lo guardado, conservar estado y
+  // resultado anteriores para no borrar un partido en vivo / terminado.
+  if (prev && STATUS_RANK[doc.status] < STATUS_RANK[prev.status]) {
+    doc.status = prev.status;
+    doc.result = prev.result;
+  }
 
   await db
     .collection<MatchDoc>("matches")
@@ -106,13 +125,22 @@ export async function syncAllFixtures(): Promise<number> {
   return matches.length;
 }
 
-// Sincroniza los partidos recientes (en vivo + recién terminados).
-// Se corre cada 1-2 min durante el torneo.
+// Sincroniza los partidos en vivo + recién terminados (cada 1-2 min).
+// Combina el endpoint LIVE (score real en vivo) con el de fecha (para los
+// que recién terminaron). LIVE tiene prioridad si un partido está en ambos.
 export async function syncLiveFixtures(): Promise<number> {
   const db = await getDb();
-  const matches = await getRecentMatches();
-  for (const m of matches) {
+  const [recent, live] = await Promise.all([
+    getRecentMatches().catch(() => [] as FdMatch[]),
+    getLiveMatches().catch(() => [] as FdMatch[]),
+  ]);
+
+  const byId = new Map<number, FdMatch>();
+  for (const m of recent) byId.set(m.id, m);
+  for (const m of live) byId.set(m.id, m); // LIVE pisa al de fecha
+
+  for (const m of byId.values()) {
     await upsertMatch(db, m);
   }
-  return matches.length;
+  return byId.size;
 }
