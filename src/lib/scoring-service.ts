@@ -23,16 +23,13 @@ export async function recalcularPuntosPartido(
   const { home_score, away_score, went_to_penalties, penalty_winner } =
     match.result;
 
-  // En eliminatorias: quién avanzó (para el bonus de "quién pasa")
+  // Bonus "quién pasa": SOLO cuando el partido se define por penales.
+  // Si hubo ganador en los 90'/alargue, el marcador ya premia acertar el ganador.
   const isKnockout = KNOCKOUT_PHASES.includes(match.phase as any);
-  const advancer = isKnockout
-    ? advancingTeam(
-        home_score!,
-        away_score!,
-        !!went_to_penalties,
-        penalty_winner
-      )
-    : null;
+  const advancer =
+    isKnockout && went_to_penalties
+      ? advancingTeam(home_score!, away_score!, true, penalty_winner)
+      : null;
 
   const predictions = await db
     .collection<PredictionDoc>("predictions")

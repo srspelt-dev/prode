@@ -60,9 +60,10 @@ export default function ReglasPage() {
         </p>
         <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-300">
           <strong>Bonus en eliminatorias:</strong> desde los 16avos, además del
-          marcador elegís <strong>quién pasa de ronda</strong>. Si acertás,
-          sumás <strong>+3 puntos</strong> extra (se acumulan a los del
-          marcador), sin importar cómo se haya definido.
+          marcador elegís <strong>quién pasa de ronda</strong>. Si el partido se
+          define <strong>por penales</strong> y acertaste al equipo que clasificó,
+          sumás <strong>+3 puntos</strong> extra. (Si hubo ganador en los 90' o
+          alargue, el marcador ya te premia acertar el ganador.)
         </p>
       </div>
 

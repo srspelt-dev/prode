@@ -303,7 +303,8 @@ export default function MatchCard({
             {isKnockout && (
               <div className="flex flex-col items-center gap-1.5">
                 <span className="text-xs text-slate-500">
-                  ¿Quién pasa? <span className="text-pitch">+3 pts</span>
+                  ¿Quién pasa?{" "}
+                  <span className="text-pitch">+3 si hay penales</span>
                 </span>
                 <div className="flex gap-2">
                   {(["home", "away"] as const).map((side) => {
