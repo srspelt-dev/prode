@@ -106,6 +106,19 @@ async function upsertMatch(db: Db, m: FdMatch): Promise<void> {
     doc.result = prev.result;
   }
 
+  // No revertir equipos ya asignados a "Por definir" (la API de eliminatorias
+  // a veces los manda vacíos aunque ya estaban definidos).
+  if (prev) {
+    if (doc.home_team === "Por definir" && prev.home_team !== "Por definir") {
+      doc.home_team = prev.home_team;
+      doc.home_logo = prev.home_logo;
+    }
+    if (doc.away_team === "Por definir" && prev.away_team !== "Por definir") {
+      doc.away_team = prev.away_team;
+      doc.away_logo = prev.away_logo;
+    }
+  }
+
   await db
     .collection<MatchDoc>("matches")
     .updateOne(
