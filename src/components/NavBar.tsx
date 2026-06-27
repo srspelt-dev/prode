@@ -96,7 +96,7 @@ export default function NavBar() {
     <>
       {/* Barra superior */}
       <header
-        className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90"
+        className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1736]/70"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <nav className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
@@ -151,7 +151,7 @@ export default function NavBar() {
       {/* Barra inferior (solo mobile) */}
       {loaded && user && (
         <nav
-          className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 sm:hidden"
+          className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/85 backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1736]/80 sm:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div className="mx-auto flex max-w-3xl">

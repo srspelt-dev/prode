@@ -12,11 +12,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const { match_id, home_score, away_score } = await req.json();
+  const { match_id, home_score, away_score, advances } = await req.json();
 
   if (!match_id || !ObjectId.isValid(match_id)) {
     return NextResponse.json({ error: "match_id inválido" }, { status: 400 });
   }
+
+  const adv = advances === "home" || advances === "away" ? advances : null;
   if (
     typeof home_score !== "number" ||
     typeof away_score !== "number" ||
@@ -59,6 +61,7 @@ export async function POST(req: NextRequest) {
       $set: {
         home_score,
         away_score,
+        advances: adv,
         submitted_at: new Date(),
         points_earned: null,
       },
@@ -67,5 +70,5 @@ export async function POST(req: NextRequest) {
     { upsert: true }
   );
 
-  return NextResponse.json({ ok: true, home_score, away_score });
+  return NextResponse.json({ ok: true, home_score, away_score, advances: adv });
 }

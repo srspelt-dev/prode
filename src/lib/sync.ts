@@ -35,7 +35,7 @@ const STAGE_MAP: Record<string, MatchPhase> = {
 
 function parseMatch(m: FdMatch): MatchDoc {
   const kickoff = new Date(m.utcDate);
-  const deadline = new Date(kickoff.getTime() - 5 * 60 * 1000);
+  const deadline = new Date(kickoff.getTime() - 1 * 60 * 1000);
   const status = STATUS_MAP[m.status] ?? "upcoming";
 
   // En football-data.org, score.fullTime es el resultado tras 90'+alargue
@@ -43,6 +43,14 @@ function parseMatch(m: FdMatch): MatchDoc {
   const wentToPenalties = m.score?.duration === "PENALTY_SHOOTOUT";
   const homeScore = m.score?.fullTime?.home ?? null;
   const awayScore = m.score?.fullTime?.away ?? null;
+  // Quién clasificó por penales (para el bonus de eliminatorias)
+  const penaltyWinner = wentToPenalties
+    ? m.score?.winner === "HOME_TEAM"
+      ? "home"
+      : m.score?.winner === "AWAY_TEAM"
+        ? "away"
+        : null
+    : null;
 
   const phase = STAGE_MAP[m.stage] ?? "grupos";
   // "GROUP_A" → "A"
@@ -69,6 +77,7 @@ function parseMatch(m: FdMatch): MatchDoc {
             home_score: homeScore,
             away_score: awayScore,
             went_to_penalties: wentToPenalties,
+            penalty_winner: penaltyWinner,
           }
         : null,
     synced_at: new Date(),

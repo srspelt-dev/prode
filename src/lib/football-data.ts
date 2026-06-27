@@ -112,6 +112,33 @@ export interface FdStandingGroup {
   table: FdStandingRow[];
 }
 
+// Detalle de un partido (entretiempo, estadio, árbitro, etc.).
+export async function getMatchDetail(id: number): Promise<any> {
+  return get(`matches/${id}`, {});
+}
+
+export interface FdScorer {
+  name: string;
+  team: string;
+  team_crest: string | null;
+  goals: number;
+  assists: number | null;
+}
+
+// Tabla de goleadores del torneo.
+export async function getScorers(limit = 30): Promise<FdScorer[]> {
+  const data = await get(`competitions/${COMPETITION}/scorers`, {
+    limit: String(limit),
+  });
+  return ((data?.scorers ?? []) as any[]).map((s) => ({
+    name: s.player?.name ?? "?",
+    team: s.team?.name ?? "",
+    team_crest: s.team?.crest ?? null,
+    goals: s.goals ?? 0,
+    assists: s.assists ?? null,
+  }));
+}
+
 // Tabla de posiciones (grupos del Mundial).
 export async function getStandings(): Promise<FdStandingGroup[]> {
   const data = await get(`competitions/${COMPETITION}/standings`, {});

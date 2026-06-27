@@ -1,114 +1,146 @@
 "use client";
 
-import ScoreBadge from "@/components/ScoreBadge";
-
-interface Ejemplo {
-  real: string;
-  pred: string;
-  pts: number;
-  detalle: string;
-}
-
-const EJEMPLOS: Ejemplo[] = [
-  { real: "2-1", pred: "2-1", pts: 6, detalle: "Resultado exacto" },
-  { real: "2-1", pred: "3-1", pts: 3, detalle: "Acertaste el ganador, pero no el marcador ni la diferencia" },
-  { real: "2-0", pred: "3-1", pts: 4, detalle: "Ganador correcto + misma diferencia (2 goles)" },
-  { real: "1-1", pred: "1-1", pts: 6, detalle: "Empate exacto" },
-  { real: "1-1", pred: "0-0", pts: 3, detalle: "Acertaste el empate (cualquier empate suma 3)" },
-  { real: "2-1", pred: "1-2", pts: 0, detalle: "Erraste el ganador" },
-  { real: "0-0", pred: "1-0", pts: 0, detalle: "No era empate" },
-];
+import { Calculator, AlertTriangle, Clock, Users } from "lucide-react";
 
 export default function ReglasPage() {
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-bold">Cómo se suman los puntos</h1>
+    <div className="space-y-4">
+      <h1 className="font-display text-xl font-bold">Reglas</h1>
 
-      {/* Tabla de reglas */}
-      <div className="card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-400 dark:bg-slate-800/50">
-            <tr>
-              <th className="px-4 py-2">Situación</th>
-              <th className="px-4 py-2 text-right">Puntos</th>
-            </tr>
-          </thead>
-          <tbody>
-            <Regla
-              texto="Resultado exacto (acertás el marcador completo)"
-              pts={6}
-            />
-            <Regla
-              texto="Ganador correcto + diferencia de goles exacta"
-              pts={4}
-            />
-            <Regla
-              texto="Ganador o empate correcto (sin acertar el marcador)"
-              pts={3}
-            />
-            <Regla texto="No acertaste el resultado" pts={0} />
-          </tbody>
-        </table>
+      {/* Cálculo de puntos */}
+      <div className="card p-4">
+        <SectionHeader
+          icon={<Calculator size={18} />}
+          tint="bg-amber-500/15 text-amber-500"
+          title="Cálculo de puntos"
+        />
+        <div className="mt-4 space-y-4">
+          <RuleRow
+            pts={6}
+            tint="bg-emerald-500/15 text-emerald-500"
+            title="Resultado exacto"
+            desc="Tu pronóstico fue 2-1 y el partido finalizó 2-1. Puntaje máximo."
+          />
+          <RuleRow
+            pts={4}
+            tint="bg-emerald-500/15 text-emerald-500"
+            title="Ganador + diferencia de goles"
+            desc="Tu pronóstico fue 2-1 y finalizó 1-0. Acertaste el ganador y la diferencia de goles."
+          />
+          <RuleRow
+            pts={3}
+            tint="bg-emerald-500/15 text-emerald-500"
+            title="Ganador o empate"
+            desc="2-1 y finalizó 2-0: acertaste el ganador. 1-1 y finalizó 2-2: acertaste el empate."
+          />
+          <RuleRow
+            pts={0}
+            tint="bg-red-500/15 text-red-500"
+            title="Fallaste"
+            desc="Tu pronóstico fue 2-1 y el partido finalizó 1-2. No sumás puntos."
+          />
+        </div>
+        <p className="mt-4 text-xs leading-relaxed text-slate-400">
+          * En los empates no se cuenta la diferencia de goles. Si un partido
+          finalizó 1-1 y tu pronóstico fue:
+          <br />→ 1-1, sumás 6 puntos. → cualquier otro empate, sumás 3 puntos.
+        </p>
       </div>
 
-      {/* Ejemplos */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Ejemplos
-        </h2>
-        <div className="card divide-y divide-slate-100 dark:divide-slate-800">
-          {EJEMPLOS.map((e, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between gap-3 px-4 py-3"
-            >
-              <div className="text-sm">
-                <div className="font-medium">
-                  Resultado <span className="font-mono">{e.real}</span> · Tu
-                  pronóstico <span className="font-mono">{e.pred}</span>
-                </div>
-                <div className="text-xs text-slate-400">{e.detalle}</div>
-              </div>
-              <ScoreBadge points={e.pts} />
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Penales */}
+      <div className="card p-4">
+        <SectionHeader
+          icon={<AlertTriangle size={18} />}
+          tint="bg-red-500/15 text-red-500"
+          title="Penales"
+        />
+        <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-300">
+          Si un partido se define por penales, se usa el resultado{" "}
+          <strong>previo a la tanda</strong> (90' o alargue) para el cálculo.
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-300">
+          <strong>Bonus en eliminatorias:</strong> desde los 16avos, además del
+          marcador elegís <strong>quién pasa de ronda</strong>. Si acertás,
+          sumás <strong>+3 puntos</strong> extra (se acumulan a los del
+          marcador), sin importar cómo se haya definido.
+        </p>
+      </div>
 
-      {/* Notas */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-          A tener en cuenta
-        </h2>
-        <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-          <li className="card p-3">
-            <strong>Plazo:</strong> podés cargar o editar tu pronóstico hasta{" "}
-            <strong>5 minutos antes</strong> del inicio del partido. Después se
-            bloquea.
-          </li>
-          <li className="card p-3">
-            <strong>Penales:</strong> si un partido se define por penales, cuenta
-            el resultado <strong>antes de la tanda</strong> (el del tiempo
-            reglamentario o alargue). Ejemplo: si terminó 1-1 y se definió por
-            penales, para el prode vale 1-1.
-          </li>
-          <li className="card p-3">
-            <strong>Ligas:</strong> tus puntos cuentan tanto en la tabla global
-            como en cada liga privada en la que estés.
-          </li>
-        </ul>
-      </section>
+      {/* Tiempo límite */}
+      <div className="card p-4">
+        <SectionHeader
+          icon={<Clock size={18} />}
+          tint="bg-sky-500/15 text-sky-500"
+          title="Tiempo límite para pronosticar"
+        />
+        <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-300">
+          Podés cargar o editar tu pronóstico hasta{" "}
+          <strong>1 minuto antes</strong> del inicio del partido. Después se
+          bloquea.
+        </p>
+      </div>
+
+      {/* Ligas */}
+      <div className="card p-4">
+        <SectionHeader
+          icon={<Users size={18} />}
+          tint="bg-pitch/15 text-pitch dark:text-pitch-light"
+          title="Ligas y puntos"
+        />
+        <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-300">
+          El ranking global suma solo los puntos del Mundial. Tus puntos también
+          cuentan en cada liga privada en la que estés.
+        </p>
+      </div>
     </div>
   );
 }
 
-function Regla({ texto, pts }: { texto: string; pts: number }) {
+function SectionHeader({
+  icon,
+  tint,
+  title,
+}: {
+  icon: React.ReactNode;
+  tint: string;
+  title: string;
+}) {
   return (
-    <tr className="border-t border-slate-100">
-      <td className="px-4 py-3">{texto}</td>
-      <td className="px-4 py-3 text-right">
-        <ScoreBadge points={pts} />
-      </td>
-    </tr>
+    <div className="flex items-center gap-3">
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${tint}`}
+      >
+        {icon}
+      </span>
+      <h2 className="text-lg font-bold">{title}</h2>
+    </div>
+  );
+}
+
+function RuleRow({
+  pts,
+  tint,
+  title,
+  desc,
+}: {
+  pts: number;
+  tint: string;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="flex gap-3">
+      <span
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${tint}`}
+      >
+        +{pts}
+      </span>
+      <div className="min-w-0">
+        <div className="font-semibold">{title}</div>
+        <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+          {desc}
+        </p>
+      </div>
+    </div>
   );
 }

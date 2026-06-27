@@ -42,3 +42,20 @@ export function calcularPuntos(
   // Ganador correcto → 3
   return 3;
 }
+
+// Puntos extra (eliminatorias) por acertar quién pasa de ronda.
+export const ADVANCE_BONUS = 3;
+
+// Equipo que avanzó en un partido de eliminatorias:
+// el que ganó por penales, o el de mayor marcador (90'+alargue).
+export function advancingTeam(
+  realLocal: number,
+  realVisitante: number,
+  wentToPenalties: boolean,
+  penaltyWinner?: "home" | "away" | null
+): "home" | "away" | null {
+  if (wentToPenalties) return penaltyWinner ?? null;
+  if (realLocal > realVisitante) return "home";
+  if (realVisitante > realLocal) return "away";
+  return null;
+}

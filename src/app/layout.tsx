@@ -29,8 +29,8 @@ export const viewport: Viewport = {
 const themeScript = `
 (function(){try{
   var t = localStorage.getItem('theme');
-  var dark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  if (dark) document.documentElement.classList.add('dark');
+  // Por defecto oscuro (estilo Apple Sports); solo claro si el usuario lo eligió.
+  if (t !== 'light') document.documentElement.classList.add('dark');
 }catch(e){}})();
 `;
 

@@ -20,13 +20,20 @@ export async function PUT(
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
 
-  const { home_score, away_score, went_to_penalties } = await req.json();
+  const { home_score, away_score, went_to_penalties, penalty_winner } =
+    await req.json();
   if (typeof home_score !== "number" || typeof away_score !== "number") {
     return NextResponse.json(
       { error: "home_score y away_score deben ser números" },
       { status: 400 }
     );
   }
+
+  const pen = Boolean(went_to_penalties);
+  const winner =
+    pen && (penalty_winner === "home" || penalty_winner === "away")
+      ? penalty_winner
+      : null;
 
   const db = await getDb();
   const _id = new ObjectId(params.id);
@@ -41,7 +48,8 @@ export async function PUT(
         result: {
           home_score,
           away_score,
-          went_to_penalties: Boolean(went_to_penalties),
+          went_to_penalties: pen,
+          penalty_winner: winner,
         },
       },
     }

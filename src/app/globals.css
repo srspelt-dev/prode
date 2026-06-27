@@ -3,7 +3,15 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/* Tema oscuro estilo Apple Sports: fondo azul marino con paneles translúcidos */
+.dark body {
+  color: rgb(241 245 249);
+  background: #0a1430;
+  background-image: linear-gradient(180deg, #122251 0%, #0a1430 55%);
+  background-attachment: fixed;
 }
 
 h1,
@@ -13,11 +21,26 @@ h2,
 }
 
 .card {
-  @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+}
+/* Liquid glass (modo oscuro): material translúcido con blur + brillo superior */
+.dark .card {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.06);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    0 8px 24px -12px rgba(0, 0, 0, 0.5);
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition active:scale-[0.97];
+  @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition active:scale-[0.97];
 }
 
 .btn-primary {
@@ -25,20 +48,41 @@ h2,
 }
 
 .btn-ghost {
-  @apply btn border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700;
+  @apply btn border border-slate-300 bg-white hover:bg-slate-100;
+}
+.dark .btn-ghost {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: rgb(241 245 249);
+}
+.dark .btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 .input {
-  @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-pitch focus:ring-1 focus:ring-pitch dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100;
+  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-pitch focus:ring-1 focus:ring-pitch;
+}
+.dark .input {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: rgb(241 245 249);
 }
 
 .score-input {
-  @apply w-12 rounded-lg border border-slate-300 bg-white text-center text-lg font-bold outline-none focus:border-pitch focus:ring-1 focus:ring-pitch dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100;
+  @apply w-12 rounded-xl border border-slate-300 bg-white text-center text-lg font-bold outline-none focus:border-pitch focus:ring-1 focus:ring-pitch;
+}
+.dark .score-input {
+  border-color: rgba(255, 255, 255, 0.14);
+  background-color: rgba(255, 255, 255, 0.06);
+  color: rgb(241 245 249);
 }
 
 /* Skeleton de carga */
 .skeleton {
-  @apply animate-pulse rounded-md bg-slate-200 dark:bg-slate-800;
+  @apply animate-pulse rounded-md bg-slate-200;
+}
+.dark .skeleton {
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 @keyframes toastIn {

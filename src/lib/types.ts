@@ -28,6 +28,8 @@ export interface MatchResult {
   home_score: number | null;
   away_score: number | null;
   went_to_penalties: boolean;
+  // En eliminatorias con penales: qué equipo clasificó (para el bonus).
+  penalty_winner?: "home" | "away" | null;
 }
 
 export interface MatchDoc {
@@ -64,6 +66,8 @@ export interface PredictionDoc {
   match_id: ObjectId;
   home_score: number;
   away_score: number;
+  // En eliminatorias: a quién elegís que pasa de ronda (bonus si acertás).
+  advances?: "home" | "away" | null;
   points_earned: number | null;
   submitted_at: Date;
 }

@@ -254,6 +254,9 @@ function AdminMatchRow({
     match.result?.away_score != null ? String(match.result.away_score) : ""
   );
   const [pen, setPen] = useState(match.result?.went_to_penalties ?? false);
+  const [winner, setWinner] = useState<"home" | "away" | "">(
+    match.result?.penalty_winner ?? ""
+  );
   const [saving, setSaving] = useState(false);
 
   async function save() {
@@ -263,6 +266,7 @@ function AdminMatchRow({
         home_score: parseInt(home, 10),
         away_score: parseInt(away, 10),
         went_to_penalties: pen,
+        penalty_winner: pen ? winner || null : null,
       });
       onSaved();
     } finally {
@@ -339,6 +343,18 @@ function AdminMatchRow({
         />
         Penales
       </label>
+      {pen && (
+        <select
+          className="rounded border border-slate-300 px-1 py-1 text-xs dark:border-slate-700 dark:bg-slate-800"
+          value={winner}
+          onChange={(e) => setWinner(e.target.value as "home" | "away" | "")}
+          title="¿Quién pasó por penales?"
+        >
+          <option value="">¿Quién pasó?</option>
+          <option value="home">{match.home_team}</option>
+          <option value="away">{match.away_team}</option>
+        </select>
+      )}
       <button
         className="btn-primary px-3 py-1.5 text-xs"
         onClick={save}

@@ -46,7 +46,7 @@ function fixture(
     home_flag: homeFlag,
     away_flag: awayFlag,
     kickoff_at: kickoff,
-    deadline_at: new Date(kickoff.getTime() - 5 * 60 * 1000),
+    deadline_at: new Date(kickoff.getTime() - 1 * 60 * 1000),
     status: "upcoming",
     result: null,
     synced_at: new Date(),

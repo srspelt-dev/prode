@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     home_logo: body.home_logo ? String(body.home_logo) : null,
     away_logo: body.away_logo ? String(body.away_logo) : null,
     kickoff_at: kickoff,
-    deadline_at: new Date(kickoff.getTime() - 5 * 60 * 1000),
+    deadline_at: new Date(kickoff.getTime() - 1 * 60 * 1000),
     status: "upcoming",
     result: null,
     synced_at: new Date(),
@@ -128,6 +128,7 @@ export async function GET(req: NextRequest) {
         ? {
             home_score: pred.home_score,
             away_score: pred.away_score,
+            advances: pred.advances ?? null,
             points_earned: pred.points_earned,
           }
         : null,
