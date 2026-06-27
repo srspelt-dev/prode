@@ -19,20 +19,35 @@ export async function GET(req: NextRequest) {
 
   const db = await getDb();
   const now = Date.now();
-  const from = new Date(now);
-  const to = new Date(now + 70 * 60 * 1000); // arranca dentro de los próximos 70 min
+  const min = (n: number) => new Date(now + n * 60 * 1000);
 
-  // Partidos por empezar pronto a los que aún no se mandó recordatorio
-  const matches = await db
+  // Dos etapas:
+  //  - 1h:  arranca dentro de [20, 75] min y no se mandó el de 1h
+  //  - 15m: arranca dentro de [0, 20] min y no se mandó el de 15m
+  const oneHour = await db
     .collection<MatchDoc>("matches")
     .find({
       status: "upcoming",
-      kickoff_at: { $gte: from, $lte: to },
-      reminder_sent: { $ne: true },
+      kickoff_at: { $gte: min(20), $lte: min(75) },
+      reminder_1h_sent: { $ne: true },
     } as any)
     .toArray();
 
-  if (matches.length === 0) {
+  const fifteen = await db
+    .collection<MatchDoc>("matches")
+    .find({
+      status: "upcoming",
+      kickoff_at: { $gte: new Date(now), $lte: min(20) },
+      reminder_15m_sent: { $ne: true },
+    } as any)
+    .toArray();
+
+  const jobs = [
+    ...oneHour.map((m) => ({ match: m, stage: "1h" as const })),
+    ...fifteen.map((m) => ({ match: m, stage: "15m" as const })),
+  ];
+
+  if (jobs.length === 0) {
     return NextResponse.json({ reminded: 0, matches: 0 });
   }
 
@@ -42,7 +57,7 @@ export async function GET(req: NextRequest) {
     .toArray()) as unknown as PushSub[];
 
   let sent = 0;
-  for (const match of matches) {
+  for (const { match, stage } of jobs) {
     // Usuarios que YA pronosticaron este partido
     const preds = await db
       .collection<PredictionDoc>("predictions")
@@ -55,11 +70,18 @@ export async function GET(req: NextRequest) {
       1,
       Math.round((new Date(match.kickoff_at).getTime() - now) / 60000)
     );
-    const payload = {
-      title: "⚽ No te olvides de pronosticar",
-      body: `${match.home_team} vs ${match.away_team} arranca en ~${mins} min. ¡Cargá tu pronóstico!`,
-      url: "/partidos",
-    };
+    const payload =
+      stage === "15m"
+        ? {
+            title: "⏰ Última chance",
+            body: `${match.home_team} vs ${match.away_team} arranca en ~${mins} min. ¡Cargá ya tu pronóstico!`,
+            url: "/partidos",
+          }
+        : {
+            title: "⚽ No te olvides de pronosticar",
+            body: `${match.home_team} vs ${match.away_team} arranca en ~${mins} min.`,
+            url: "/partidos",
+          };
 
     for (const sub of subs) {
       if (predicted.has(sub.user_id.toString())) continue;
@@ -67,10 +89,12 @@ export async function GET(req: NextRequest) {
       if (ok) sent++;
     }
 
+    const flag =
+      stage === "15m" ? { reminder_15m_sent: true } : { reminder_1h_sent: true };
     await db
       .collection<MatchDoc>("matches")
-      .updateOne({ _id: match._id }, { $set: { reminder_sent: true } as any });
+      .updateOne({ _id: match._id }, { $set: flag as any });
   }
 
-  return NextResponse.json({ reminded: sent, matches: matches.length });
+  return NextResponse.json({ reminded: sent, jobs: jobs.length });
 }

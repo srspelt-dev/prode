@@ -24,3 +24,23 @@ export const KNOCKOUT_PHASES = [
   "tercer_puesto",
   "final",
 ] as const;
+
+// Orden de columnas para el bracket (3er puesto al final, aparte).
+export const BRACKET_ORDER = [
+  "treintaidosavos",
+  "octavos",
+  "cuartos",
+  "semifinal",
+  "final",
+  "tercer_puesto",
+] as const;
+
+// Etiquetas cortas para las columnas del bracket.
+export const PHASE_SHORT: Record<string, string> = {
+  treintaidosavos: "16avos",
+  octavos: "8vos",
+  cuartos: "4tos",
+  semifinal: "Semis",
+  tercer_puesto: "3er puesto",
+  final: "Final",
+};

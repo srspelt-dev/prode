@@ -47,7 +47,8 @@ export interface MatchDoc {
   status: MatchStatus;
   result: MatchResult | null;
   manual_result?: boolean; // resultado cargado a mano (el sync no lo pisa)
-  reminder_sent?: boolean; // ya se mandó el recordatorio push
+  reminder_1h_sent?: boolean; // recordatorio ~1h antes
+  reminder_15m_sent?: boolean; // recordatorio ~15min antes
   synced_at: Date;
 }
 
