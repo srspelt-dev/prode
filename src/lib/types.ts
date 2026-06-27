@@ -44,6 +44,7 @@ export interface MatchDoc {
   deadline_at: Date;
   status: MatchStatus;
   result: MatchResult | null;
+  manual_result?: boolean; // resultado cargado a mano (el sync no lo pisa)
   synced_at: Date;
 }
 

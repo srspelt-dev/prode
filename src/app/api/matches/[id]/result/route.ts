@@ -36,6 +36,8 @@ export async function PUT(
     {
       $set: {
         status: "finished",
+        // Marca de resultado manual: el sync de la API no lo pisa.
+        manual_result: true,
         result: {
           home_score,
           away_score,

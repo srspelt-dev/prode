@@ -87,10 +87,12 @@ async function upsertMatch(db: Db, m: FdMatch): Promise<void> {
     .collection<MatchDoc>("matches")
     .findOne({ external_id: doc.external_id });
 
-  // Estado monótono: nunca retroceder (la API a veces devuelve datos viejos).
-  // Si lo que llega es "menos avanzado" que lo guardado, conservar estado y
-  // resultado anteriores para no borrar un partido en vivo / terminado.
-  if (prev && STATUS_RANK[doc.status] < STATUS_RANK[prev.status]) {
+  // Si el admin cargó el resultado a mano, NO pisarlo con el de la API.
+  if ((prev as any)?.manual_result) {
+    doc.status = prev!.status;
+    doc.result = prev!.result;
+  } else if (prev && STATUS_RANK[doc.status] < STATUS_RANK[prev.status]) {
+    // Estado monótono: nunca retroceder (la API a veces devuelve datos viejos).
     doc.status = prev.status;
     doc.result = prev.result;
   }
