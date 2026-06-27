@@ -6,6 +6,8 @@ import { Target, Check, Crosshair, Flame, type LucideIcon } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import ScoreBadge from "@/components/ScoreBadge";
 import Avatar from "@/components/Avatar";
+import PushToggle from "@/components/PushToggle";
+import PointsChart from "@/components/PointsChart";
 import type { PublicUser } from "@/lib/types";
 
 interface PredVM {
@@ -76,6 +78,12 @@ export default function CuentaPage() {
         <Stat label="Exactos" value={stats.exactos} icon={Crosshair} />
         <Stat label="Racha" value={stats.racha} icon={Flame} />
       </div>
+
+      {/* Evolución de puntos */}
+      <PointsChart preds={preds} />
+
+      {/* Recordatorios push */}
+      <PushToggle />
 
       <ChangePassword />
 

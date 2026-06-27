@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Award, ChevronLeft, ChevronRight } from "lucide-react";
+import { Award } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import MatchCard, { MatchVM } from "@/components/MatchCard";
 import JoinLeagueBanner from "@/components/JoinLeagueBanner";
@@ -25,21 +25,24 @@ function addDays(d: Date, n: number): Date {
   return x;
 }
 
-function labelDay(d: Date): string {
+function labelDay(key: string): string {
+  const [y, m, d] = key.split("-").map(Number);
   const txt = new Intl.DateTimeFormat("es-AR", {
     weekday: "long",
     day: "numeric",
     month: "long",
-  }).format(d);
+  }).format(new Date(y, m - 1, d));
   return txt.charAt(0).toUpperCase() + txt.slice(1);
 }
+
+type Tab = "ayer" | "hoy" | "proximos";
 
 export default function PartidosPage() {
   const router = useRouter();
   const [matches, setMatches] = useState<MatchVM[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selected, setSelected] = useState<Date>(startOfToday());
+  const [tab, setTab] = useState<Tab>("hoy");
 
   useEffect(() => {
     apiGet<{ matches: MatchVM[] }>("/matches")
@@ -74,7 +77,6 @@ export default function PartidosPage() {
     }
   }, [matches]);
 
-  // Al guardar un pronóstico, reflejarlo en la lista (sobrevive al cambiar de día)
   function handleSaved(id: string, h: number, a: number) {
     setMatches((prev) =>
       prev.map((m) =>
@@ -84,6 +86,7 @@ export default function PartidosPage() {
               my_prediction: {
                 home_score: h,
                 away_score: a,
+                advances: m.my_prediction?.advances ?? null,
                 points_earned: null,
               },
             }
@@ -92,29 +95,32 @@ export default function PartidosPage() {
     );
   }
 
-  // Días que tienen partidos (ordenados)
-  const matchDays = useMemo(() => {
-    const set = new Set(matches.map((m) => dayKey(m.kickoff_at)));
-    return Array.from(set).sort();
-  }, [matches]);
-
   const todayKey = dayKey(startOfToday());
-  const selKey = dayKey(selected);
+  const yesterdayKey = dayKey(addDays(startOfToday(), -1));
 
-  const matchesOfDay = useMemo(
-    () => matches.filter((m) => dayKey(m.kickoff_at) === selKey),
-    [matches, selKey]
+  const sorted = useMemo(
+    () =>
+      [...matches].sort(
+        (a, b) =>
+          new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime()
+      ),
+    [matches]
   );
 
-  // Próximo día con partidos a partir del seleccionado (estrictamente posterior)
-  const nextMatchDay = matchDays.find((k) => k > selKey);
-  // Primer día con partidos desde hoy en adelante
-  const firstUpcomingDay = matchDays.find((k) => k >= todayKey);
+  const ayer = sorted.filter((m) => dayKey(m.kickoff_at) === yesterdayKey);
+  const hoy = sorted.filter((m) => dayKey(m.kickoff_at) === todayKey);
+  const proximos = sorted.filter((m) => dayKey(m.kickoff_at) > todayKey);
 
-  function goToKey(key: string) {
-    const [y, m, d] = key.split("-").map(Number);
-    setSelected(new Date(y, m - 1, d));
-  }
+  // Próximos agrupados por día
+  const proximosByDay = useMemo(() => {
+    const map = new Map<string, MatchVM[]>();
+    for (const m of proximos) {
+      const k = dayKey(m.kickoff_at);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(m);
+    }
+    return Array.from(map.entries());
+  }, [proximos]);
 
   if (loading)
     return (
@@ -140,39 +146,28 @@ export default function PartidosPage() {
   }
 
   const nowMs = Date.now();
-  // Pendientes SOLO de hoy (día local)
-  const pendingToday = matches.filter(
+  const pendingToday = hoy.filter(
     (m) =>
       m.status === "upcoming" &&
       new Date(m.deadline_at).getTime() > nowMs &&
-      !m.my_prediction &&
-      dayKey(m.kickoff_at) === todayKey
+      !m.my_prediction
   );
-  const hasToday = matches.some((m) => dayKey(m.kickoff_at) === todayKey);
-  const nextMatch = matches
-    .filter(
-      (m) =>
-        m.status === "upcoming" && new Date(m.kickoff_at).getTime() > nowMs
-    )
-    .sort(
-      (a, b) =>
-        new Date(a.kickoff_at).getTime() - new Date(b.kickoff_at).getTime()
-    )[0];
+  const nextMatch = sorted.find(
+    (m) => m.status === "upcoming" && new Date(m.kickoff_at).getTime() > nowMs
+  );
 
   const headline =
     pendingToday.length > 0
       ? `Te faltan ${pendingToday.length} pronóstico${pendingToday.length > 1 ? "s" : ""} de hoy`
-      : hasToday
+      : hoy.length > 0
         ? "Estás al día con los de hoy"
         : "No hay partidos hoy";
 
-  // Si hay pendientes hoy, el botón lleva a hoy; si no, al próximo partido
-  const target =
-    pendingToday.length > 0
-      ? todayKey
-      : nextMatch
-        ? dayKey(nextMatch.kickoff_at)
-        : todayKey;
+  const tabs: { k: Tab; label: string; count: number }[] = [
+    { k: "ayer", label: "Ayer", count: ayer.length },
+    { k: "hoy", label: "Hoy", count: hoy.length },
+    { k: "proximos", label: "Próximos", count: proximos.length },
+  ];
 
   return (
     <div className="space-y-4">
@@ -180,7 +175,9 @@ export default function PartidosPage() {
 
       {/* Dashboard: pendientes de hoy + próximo partido */}
       <button
-        onClick={() => goToKey(target)}
+        onClick={() =>
+          setTab(pendingToday.length > 0 || hoy.length ? "hoy" : "proximos")
+        }
         className="card flex w-full items-center justify-between gap-3 p-4 text-left transition hover:shadow-md"
       >
         <div className="min-w-0">
@@ -210,77 +207,72 @@ export default function PartidosPage() {
 
       <JoinLeagueBanner />
 
-      {/* Navegador de fecha */}
-      <div className="card flex items-center justify-between p-3">
-        <button
-          className="btn-ghost px-3 py-2"
-          onClick={() => setSelected(addDays(selected, -1))}
-          aria-label="Día anterior"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        <div className="text-center">
-          <div className="font-semibold">{labelDay(selected)}</div>
-          <div className="text-xs text-slate-400">
-            {selKey === todayKey ? "Hoy" : ""}
-            {matchesOfDay.length > 0
-              ? `${selKey === todayKey ? " · " : ""}${matchesOfDay.length} partido${matchesOfDay.length > 1 ? "s" : ""}`
-              : ""}
-          </div>
-        </div>
-        <button
-          className="btn-ghost px-3 py-2"
-          onClick={() => setSelected(addDays(selected, 1))}
-          aria-label="Día siguiente"
-        >
-          <ChevronRight size={18} />
-        </button>
+      {/* Segmentos Ayer / Hoy / Próximos */}
+      <div className="flex rounded-lg bg-slate-100 p-1 text-sm dark:bg-white/5">
+        {tabs.map((t) => (
+          <button
+            key={t.k}
+            onClick={() => setTab(t.k)}
+            className={`flex-1 rounded-md py-1.5 font-medium ${
+              tab === t.k
+                ? "bg-white shadow-sm dark:bg-white/10"
+                : "text-slate-500"
+            }`}
+          >
+            {t.label}
+            {t.count > 0 && (
+              <span className="ml-1 text-xs text-slate-400">{t.count}</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* Partidos del día o estado vacío */}
-      {matchesOfDay.length > 0 ? (
-        <div className="space-y-3">
-          {matchesOfDay.map((m) => (
-            <MatchCard key={m.id} match={m} onSaved={handleSaved} />
-          ))}
-        </div>
-      ) : (
-        <div className="card space-y-3 p-6 text-center">
-          <p className="text-slate-500">
-            No hay partidos {selKey === todayKey ? "hoy" : "este día"}.
+      {/* Contenido del segmento */}
+      {tab === "ayer" && (
+        <MatchList matches={ayer} onSaved={handleSaved} empty="No hubo partidos ayer." />
+      )}
+      {tab === "hoy" && (
+        <MatchList matches={hoy} onSaved={handleSaved} empty="No hay partidos hoy." />
+      )}
+      {tab === "proximos" &&
+        (proximosByDay.length === 0 ? (
+          <p className="py-8 text-center text-sm text-slate-400">
+            No hay próximos partidos cargados.
           </p>
-          {nextMatchDay && (
-            <button
-              className="btn-primary text-sm"
-              onClick={() => goToKey(nextMatchDay)}
-            >
-              Ir al próximo día con partidos →
-            </button>
-          )}
-          {!nextMatchDay && firstUpcomingDay && firstUpcomingDay < selKey && (
-            <button
-              className="btn-ghost text-sm"
-              onClick={() => goToKey(firstUpcomingDay)}
-            >
-              ← Volver al próximo partido
-            </button>
-          )}
-        </div>
-      )}
+        ) : (
+          <div className="space-y-5">
+            {proximosByDay.map(([key, list]) => (
+              <section key={key} className="space-y-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                  {labelDay(key)}
+                </h2>
+                {list.map((m) => (
+                  <MatchCard key={m.id} match={m} onSaved={handleSaved} />
+                ))}
+              </section>
+            ))}
+          </div>
+        ))}
+    </div>
+  );
+}
 
-      {/* Acceso rápido al primer día del Mundial / próximos */}
-      {selKey === todayKey && firstUpcomingDay && firstUpcomingDay !== todayKey && (
-        <p className="text-center text-xs text-slate-400">
-          El próximo día con partidos es{" "}
-          <button
-            className="text-pitch underline"
-            onClick={() => goToKey(firstUpcomingDay)}
-          >
-            {labelDay(new Date(firstUpcomingDay + "T00:00:00"))}
-          </button>
-          .
-        </p>
-      )}
+function MatchList({
+  matches,
+  onSaved,
+  empty,
+}: {
+  matches: MatchVM[];
+  onSaved: (id: string, h: number, a: number) => void;
+  empty: string;
+}) {
+  if (matches.length === 0)
+    return <p className="py-8 text-center text-sm text-slate-400">{empty}</p>;
+  return (
+    <div className="space-y-3">
+      {matches.map((m) => (
+        <MatchCard key={m.id} match={m} onSaved={onSaved} />
+      ))}
     </div>
   );
 }
