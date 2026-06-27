@@ -147,7 +147,10 @@ export async function getStandings(): Promise<FdStandingGroup[]> {
   return standings
     .filter((s) => s.type === "TOTAL")
     .map((s) => ({
-      group: s.group,
+      // Normalizar "Group A" / "GROUP_A" → "A" (igual que en los partidos)
+      group: s.group
+        ? String(s.group).replace(/^GROUP[_\s]?/i, "")
+        : null,
       table: (s.table ?? []).map((t: any) => ({
         position: t.position,
         team: { name: t.team?.name ?? "?", crest: t.team?.crest ?? null },

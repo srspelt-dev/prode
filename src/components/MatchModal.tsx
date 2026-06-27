@@ -81,9 +81,7 @@ export default function MatchModal({
       "/standings"
     )
       .then((s) => {
-        const g = s.standings.find(
-          (x) => (x.group || "").replace("GROUP_", "") === d.group
-        );
+        const g = s.standings.find((x) => x.group === d.group);
         setGroupTable(g?.table ?? []);
       })
       .catch(() => setGroupTable([]));

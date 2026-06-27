@@ -62,7 +62,7 @@ export default function GroupStandings() {
       {groups.map((g) => (
         <div key={g.group} className="card overflow-hidden">
           <div className="border-b border-slate-100 bg-slate-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
-            {g.group?.replace("GROUP_", "Grupo ") ?? "Grupo"}
+            {g.group ? `Grupo ${g.group}` : "Grupo"}
           </div>
           <table className="w-full text-sm">
             <thead className="text-[11px] uppercase text-slate-400">
