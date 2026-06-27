@@ -79,11 +79,12 @@ export default function MatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      className="animate-fade-in fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl dark:bg-slate-900 sm:rounded-2xl"
+        className="animate-modal-in max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-white/10 bg-white p-5 shadow-2xl dark:bg-[#0e1c44] sm:rounded-2xl"
+        style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
