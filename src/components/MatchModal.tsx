@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import { phaseLabel } from "@/lib/phases";
@@ -55,6 +56,17 @@ export default function MatchModal({
 }) {
   const [d, setD] = useState<Detail | null>(null);
   const [groupTable, setGroupTable] = useState<StandRow[] | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  // Bloquear el scroll de fondo mientras el popup está abierto
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   useEffect(() => {
     apiGet<Detail>(`/matches/${matchId}/detail`)
@@ -77,7 +89,9 @@ export default function MatchModal({
       .catch(() => setGroupTable([]));
   }, [d?.group]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       className="animate-fade-in fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
@@ -207,7 +221,8 @@ export default function MatchModal({
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
