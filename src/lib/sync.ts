@@ -38,11 +38,21 @@ function parseMatch(m: FdMatch): MatchDoc {
   const deadline = new Date(kickoff.getTime() - 1 * 60 * 1000);
   const status = STATUS_MAP[m.status] ?? "upcoming";
 
-  // En football-data.org, score.fullTime es el resultado tras 90'+alargue
-  // (PREVIO a los penales). Justo lo que usamos para el scoring.
+  // Resultado para el scoring: PREVIO a los penales.
+  // OJO: en football-data, si hay penales, score.fullTime INCLUYE los penales
+  // (ej: 4-5). El empate real está en regularTime + extraTime (ej: 1-1).
   const wentToPenalties = m.score?.duration === "PENALTY_SHOOTOUT";
-  const homeScore = m.score?.fullTime?.home ?? null;
-  const awayScore = m.score?.fullTime?.away ?? null;
+  let homeScore: number | null;
+  let awayScore: number | null;
+  if (wentToPenalties && m.score?.regularTime?.home != null) {
+    const rt = m.score.regularTime;
+    const et = m.score.extraTime;
+    homeScore = (rt.home ?? 0) + (et?.home ?? 0);
+    awayScore = (rt.away ?? 0) + (et?.away ?? 0);
+  } else {
+    homeScore = m.score?.fullTime?.home ?? null;
+    awayScore = m.score?.fullTime?.away ?? null;
+  }
   // Quién clasificó por penales (para el bonus de eliminatorias)
   const penaltyWinner = wentToPenalties
     ? m.score?.winner === "HOME_TEAM"
@@ -127,8 +137,13 @@ async function upsertMatch(db: Db, m: FdMatch): Promise<void> {
       { upsert: true }
     );
 
-  // Si el partido recién terminó → calcular puntos automáticamente
-  if (prev && prev.status !== "finished" && doc.status === "finished") {
+  // Recalcular puntos si: el partido recién terminó, O ya estaba terminado pero
+  // cambió el resultado (la API a veces corrige el score / agrega los penales).
+  const justFinished = prev && prev.status !== "finished" && doc.status === "finished";
+  const resultChanged =
+    doc.status === "finished" &&
+    JSON.stringify(prev?.result ?? null) !== JSON.stringify(doc.result ?? null);
+  if (justFinished || resultChanged) {
     const match = await db
       .collection<MatchDoc>("matches")
       .findOne({ external_id: doc.external_id });

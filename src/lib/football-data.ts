@@ -35,6 +35,9 @@ export interface FdMatch {
     duration: "REGULAR" | "EXTRA_TIME" | "PENALTY_SHOOTOUT";
     fullTime: { home: number | null; away: number | null };
     halfTime?: { home: number | null; away: number | null };
+    regularTime?: { home: number | null; away: number | null };
+    extraTime?: { home: number | null; away: number | null };
+    penalties?: { home: number | null; away: number | null };
   };
 }
 
