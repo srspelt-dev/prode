@@ -1,10 +1,11 @@
-// Muestra los puntos ganados con un color según el valor.
-const COLORS: Record<number, string> = {
-  6: "bg-emerald-600 text-white",
-  4: "bg-emerald-500 text-white",
-  3: "bg-amber-500 text-white",
-  0: "bg-slate-300 text-slate-700",
-};
+// Color del badge según los puntos ganados.
+function badgeColor(p: number): string {
+  if (p >= 7) return "bg-violet-600 text-white"; // máximo (exacto + bonus)
+  if (p === 6) return "bg-emerald-600 text-white";
+  if (p === 4) return "bg-emerald-500 text-white";
+  if (p === 3) return "bg-amber-500 text-white";
+  return "bg-slate-300 text-slate-700";
+}
 
 export default function ScoreBadge({ points }: { points: number | null }) {
   if (points === null || points === undefined) {
@@ -14,7 +15,7 @@ export default function ScoreBadge({ points }: { points: number | null }) {
       </span>
     );
   }
-  const color = COLORS[points] ?? "bg-slate-300 text-slate-700";
+  const color = badgeColor(points);
   return (
     <span
       className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-bold ${color}`}

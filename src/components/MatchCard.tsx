@@ -27,6 +27,7 @@ export interface MatchVM {
     away_score: number | null;
     went_to_penalties: boolean;
     penalty_winner?: "home" | "away" | null;
+    penalty_score?: { home: number; away: number } | null;
   } | null;
   can_predict: boolean;
   my_prediction: {
@@ -41,6 +42,7 @@ interface OtherPrediction {
   username: string;
   home_score: number;
   away_score: number;
+  advances?: "home" | "away" | null;
   points_earned: number | null;
 }
 
@@ -238,7 +240,11 @@ export default function MatchCard({
             )}
           </div>
           {r?.went_to_penalties && (
-            <div className="mt-0.5 text-[10px] text-slate-400">(penales)</div>
+            <div className="mt-0.5 text-[10px] font-semibold text-violet-500">
+              {r.penalty_score
+                ? `P ${r.penalty_score.home}-${r.penalty_score.away}`
+                : "Penales"}
+            </div>
           )}
         </div>
 
@@ -405,9 +411,19 @@ export default function MatchCard({
                                 {o.username}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="font-mono font-medium">
-                                  {o.home_score}-{o.away_score}
-                                </span>
+                                <div className="text-right">
+                                  <span className="font-mono font-medium">
+                                    {o.home_score}-{o.away_score}
+                                  </span>
+                                  {isKnockout && o.advances && (
+                                    <div className="text-[10px] text-slate-400">
+                                      pasa:{" "}
+                                      {o.advances === "home"
+                                        ? match.home_team
+                                        : match.away_team}
+                                    </div>
+                                  )}
+                                </div>
                                 {match.status === "finished" && (
                                   <ScoreBadge points={o.points_earned} />
                                 )}

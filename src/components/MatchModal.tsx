@@ -22,6 +22,7 @@ interface Detail {
     away_score: number | null;
     went_to_penalties: boolean;
     penalty_winner?: "home" | "away" | null;
+    penalty_score?: { home: number; away: number } | null;
   } | null;
   half_time: { home: number; away: number } | null;
   venue: string | null;
@@ -138,16 +139,24 @@ export default function MatchModal({
                 />
               )}
               {d.result?.went_to_penalties && (
-                <Row
-                  label="Definición"
-                  value={
-                    d.result.penalty_winner === "home"
-                      ? `Por penales · pasó ${d.home_team}`
-                      : d.result.penalty_winner === "away"
-                        ? `Por penales · pasó ${d.away_team}`
-                        : "Por penales"
-                  }
-                />
+                <>
+                  <Row
+                    label="Definición"
+                    value={
+                      d.result.penalty_winner === "home"
+                        ? `Por penales · pasó ${d.home_team}`
+                        : d.result.penalty_winner === "away"
+                          ? `Por penales · pasó ${d.away_team}`
+                          : "Por penales"
+                    }
+                  />
+                  {d.result.penalty_score && (
+                    <Row
+                      label="Penales"
+                      value={`${d.result.penalty_score.home} - ${d.result.penalty_score.away}`}
+                    />
+                  )}
+                </>
               )}
               {d.venue && <Row label="Estadio" value={d.venue} />}
               {d.referee && <Row label="Árbitro" value={d.referee} />}

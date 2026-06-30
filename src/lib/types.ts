@@ -30,6 +30,8 @@ export interface MatchResult {
   went_to_penalties: boolean;
   // En eliminatorias con penales: qué equipo clasificó (para el bonus).
   penalty_winner?: "home" | "away" | null;
+  // Resultado de la tanda de penales (para mostrar, ej: 3-4).
+  penalty_score?: { home: number; away: number } | null;
 }
 
 export interface MatchDoc {

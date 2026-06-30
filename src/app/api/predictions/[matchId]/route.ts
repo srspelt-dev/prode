@@ -79,6 +79,7 @@ export async function GET(
           username: nameById.get(m.toString()) ?? "?",
           home_score: p.home_score,
           away_score: p.away_score,
+          advances: p.advances ?? null,
           points_earned: p.points_earned,
         };
       })

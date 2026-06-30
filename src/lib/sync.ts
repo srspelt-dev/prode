@@ -61,6 +61,12 @@ function parseMatch(m: FdMatch): MatchDoc {
         ? "away"
         : null
     : null;
+  // Resultado de la tanda (para mostrar)
+  const pen = m.score?.penalties;
+  const penaltyScore =
+    wentToPenalties && pen && pen.home != null && pen.away != null
+      ? { home: pen.home, away: pen.away }
+      : null;
 
   const phase = STAGE_MAP[m.stage] ?? "grupos";
   // "GROUP_A" → "A"
@@ -88,6 +94,7 @@ function parseMatch(m: FdMatch): MatchDoc {
             away_score: awayScore,
             went_to_penalties: wentToPenalties,
             penalty_winner: penaltyWinner,
+            penalty_score: penaltyScore,
           }
         : null,
     synced_at: new Date(),
