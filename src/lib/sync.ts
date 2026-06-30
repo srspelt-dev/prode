@@ -144,12 +144,17 @@ async function upsertMatch(db: Db, m: FdMatch): Promise<void> {
       { upsert: true }
     );
 
-  // Recalcular puntos si: el partido recién terminó, O ya estaba terminado pero
-  // cambió el resultado (la API a veces corrige el score / agrega los penales).
+  // Recalcular puntos si: el partido recién terminó, O cambió algún dato que
+  // AFECTA el puntaje (marcador, penales, quién pasó). El resultado de la tanda
+  // es solo visual y no dispara recálculo.
+  const scoringKey = (r: MatchDoc["result"]) =>
+    r
+      ? `${r.home_score}|${r.away_score}|${r.went_to_penalties ? 1 : 0}|${r.penalty_winner ?? ""}`
+      : "none";
   const justFinished = prev && prev.status !== "finished" && doc.status === "finished";
   const resultChanged =
     doc.status === "finished" &&
-    JSON.stringify(prev?.result ?? null) !== JSON.stringify(doc.result ?? null);
+    scoringKey(prev?.result ?? null) !== scoringKey(doc.result);
   if (justFinished || resultChanged) {
     const match = await db
       .collection<MatchDoc>("matches")
