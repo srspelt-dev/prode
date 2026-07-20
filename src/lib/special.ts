@@ -23,6 +23,28 @@ function norm(s: unknown): string {
     .toLowerCase();
 }
 
+// Normaliza texto: sin acentos, minúsculas, sin espacios extra.
+function normText(s: unknown): string {
+  return String(s ?? "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+// Match flexible para respuestas de texto (goleador): tolera acentos, nombre de
+// pila y variantes, comparando por apellido. Ej: "Mbappe" / "Kilian Mbappé" ✓.
+function textMatch(answer: unknown, correct: unknown): boolean {
+  const a = normText(answer);
+  const c = normText(correct);
+  if (!a || !c) return false;
+  if (a === c) return true;
+  const surname = c.split(/\s+/).pop() || "";
+  if (surname.length >= 3 && a.includes(surname)) return true;
+  const aSurname = a.split(/\s+/).pop() || "";
+  return aSurname.length >= 3 && c.includes(aSurname);
+}
+
 // Puntos especiales de un set de respuestas contra el resultado correcto.
 export function scoreSpecial(
   answers: Record<string, string> | undefined,
@@ -31,9 +53,23 @@ export function scoreSpecial(
   if (!answers || !results) return 0;
   let pts = 0;
   for (const q of SPECIAL_QUESTIONS) {
-    if (results[q.key] && norm(answers[q.key]) === norm(results[q.key])) {
-      pts += q.points;
+    if (!results[q.key]) continue;
+
+    let ok: boolean;
+    if (q.key === "finalista") {
+      // El subcampeón cuenta si lo nombraste como finalista O como campeón
+      // (le acertaste a que llegaba a la final, aunque erraras quién gana).
+      const sub = results.finalista;
+      ok =
+        norm(answers.finalista) === norm(sub) ||
+        norm(answers.campeon) === norm(sub);
+    } else if (q.type === "text") {
+      ok = textMatch(answers[q.key], results[q.key]);
+    } else {
+      ok = norm(answers[q.key]) === norm(results[q.key]);
     }
+
+    if (ok) pts += q.points;
   }
   return pts;
 }
