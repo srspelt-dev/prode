@@ -8,6 +8,7 @@ import JoinLeagueBanner from "@/components/JoinLeagueBanner";
 import GroupStandings from "@/components/GroupStandings";
 import KnockoutBracket from "@/components/KnockoutBracket";
 import Scorers from "@/components/Scorers";
+import FinalHero from "@/components/FinalHero";
 import type { LeaderboardRow, PublicUser } from "@/lib/types";
 
 export default function TablaPage() {
@@ -72,6 +73,10 @@ export default function TablaPage() {
 
       {tab === "prode" ? (
         <>
+          <FinalHero
+            winnerName={rows[0]?.username}
+            winnerPoints={rows[0]?.total_points}
+          />
           <JoinLeagueBanner />
           <Leaderboard rows={rows} highlightUserId={me?.id} />
           <p className="text-center text-xs text-slate-400">
