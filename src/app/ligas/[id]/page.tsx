@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { apiGet } from "@/lib/api-client";
 import Leaderboard from "@/components/Leaderboard";
+import FinalHero from "@/components/FinalHero";
 import { competitionLabel, type LeaderboardRow, type PublicUser } from "@/lib/types";
 
 interface LeagueInfo {
@@ -65,6 +66,13 @@ export default function LigaDetallePage() {
         </p>
         <ShareLeague name={league.name} code={league.code} />
       </div>
+      {league.competition === "mundial" && (
+        <FinalHero
+          winnerName={rows[0]?.username}
+          winnerPoints={rows[0]?.total_points}
+          winnerLabel="🏆 Ganador de la liga"
+        />
+      )}
       <Leaderboard rows={rows} highlightUserId={me?.id} />
     </div>
   );

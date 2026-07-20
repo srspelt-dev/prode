@@ -14,9 +14,11 @@ interface TournamentInfo {
 export default function FinalHero({
   winnerName,
   winnerPoints,
+  winnerLabel = "🏆 Ganador del prode",
 }: {
   winnerName?: string;
   winnerPoints?: number;
+  winnerLabel?: string;
 }) {
   const [info, setInfo] = useState<TournamentInfo | null>(null);
 
@@ -80,7 +82,7 @@ export default function FinalHero({
           <Avatar name={winnerName} size={40} />
           <div className="min-w-0 flex-1">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-amber-500">
-              🏆 Ganador del prode
+              {winnerLabel}
             </div>
             <div className="truncate font-bold">{winnerName}</div>
           </div>
