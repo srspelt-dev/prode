@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Award } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { isSpecialCorrect } from "@/lib/special-match";
 import { toast } from "@/lib/toast";
 
 interface Question {
@@ -100,7 +101,8 @@ export default function EspecialesPage() {
           const correct = data.results?.[q.key];
           const mine = answers[q.key] || "";
           const acerto =
-            correct && mine && correct.toLowerCase() === mine.toLowerCase();
+            !!data.results &&
+            isSpecialCorrect(q.key, q.type, answers, data.results);
           return (
             <div key={q.key} className="card p-4">
               <div className="mb-2 flex items-center justify-between">
